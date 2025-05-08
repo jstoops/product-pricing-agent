@@ -845,14 +845,14 @@ def messages_for(item):
     ]
 
 messages_for(train[0])
+```
 
 > [{'role': 'system',
 >
-> > 'content': 'You estimate prices of items. Reply only with the price, no explanation'},
-> > {'role': 'user',
-> > 'content': 'How much does this cost?\n\nDelphi FG0166 Fuel Pump Module\nDelphi brings 80 years of OE Heritage into each Delphi pump, ensuring quality and fitment for each Delphi part. Part is validated, tested and matched to the right vehicle application Delphi brings 80 years of OE Heritage into each Delphi assembly, ensuring quality and fitment for each Delphi part Always be sure to check and clean fuel tank to avoid unnecessary returns Rigorous OE-testing ensures the pump can withstand extreme temperatures Brand Delphi, Fit Type Vehicle Specific Fit, Dimensions LxWxH 19.7 x 7.7 x 5.1 inches, Weight 2.2 Pounds, Auto Part Position Unknown, Operation Mode Mechanical, Manufacturer Delphi, Model FUEL PUMP, Dimensions 19.7'},
-> > {'role': 'assistant', 'content': 'Price is $226.95'}]
-```
+> 'content': 'You estimate prices of items. Reply only with the price, no explanation'},
+> {'role': 'user',
+> 'content': 'How much does this cost?\n\nDelphi FG0166 Fuel Pump Module\nDelphi brings 80 years of OE Heritage into each Delphi pump, ensuring quality and fitment for each Delphi part. Part is validated, tested and matched to the right vehicle application Delphi brings 80 years of OE Heritage into each Delphi assembly, ensuring quality and fitment for each Delphi part Always be sure to check and clean fuel tank to avoid unnecessary returns Rigorous OE-testing ensures the pump can withstand extreme temperatures Brand Delphi, Fit Type Vehicle Specific Fit, Dimensions LxWxH 19.7 x 7.7 x 5.1 inches, Weight 2.2 Pounds, Auto Part Position Unknown, Operation Mode Mechanical, Manufacturer Delphi, Model FUEL PUMP, Dimensions 19.7'},
+> {'role': 'assistant', 'content': 'Price is $226.95'}]
 
 2. Convert the items into a list of json objects - a "jsonl" string. Each row represents a message in the form: `{"messages" : [{"role": "system", "content": "You estimate prices...`
 
