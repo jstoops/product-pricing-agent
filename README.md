@@ -837,14 +837,14 @@ fine_tune_validation = train[200:250]
 ```
 def messages_for(item):
     system_message = "You estimate prices of items. Reply only with the price, no explanation"
-    user_prompt = item.test_prompt().replace(" to the nearest dollar","").replace("\\n\\nPrice is \$","")
-    return [
-        {"role": "system", "content": system_message},
-        {"role": "user", "content": user_prompt},
-        {"role": "assistant", "content": f"Price is \${item.price:.2f}"}
-    ]
+    user_prompt = item.test_prompt\(\).replace\(" to the nearest dollar",""\).replace\("\\n\\nPrice is \$",""\)
+    return \[
+        \{"role": "system", "content": system_message\},
+        \{"role": "user", "content": user_prompt\},
+        \{"role": "assistant", "content": f"Price is \$\{item.price:.2f\}"\}
+    \]
 
-messages_for(train[0])
+messages_for\(train\[0\]\)
 ```
 
 > [{'role': 'system',
