@@ -836,7 +836,7 @@ fine_tune_validation = train[200:250]
 
    def messages_for(item):
    system_message = "You estimate prices of items. Reply only with the price, no explanation"
-   user_prompt = item.test_prompt().replace(" to the nearest dollar","").replace("\n\nPrice is $","")
+   user_prompt = item.test_prompt().replace(" to the nearest dollar","").replace("\\n\\nPrice is $","")
    return [
    {"role": "system", "content": system_message},
    {"role": "user", "content": user_prompt},
@@ -2027,6 +2027,16 @@ Code:
 #### Scanner Agent
 
 The Scanner Agent using the Deals Scraper to `fetch_deals` by calling `ScrapeDeal.fetch()` and passes in deals from a previous search to make sure only new deals are returned. The `scan` method that uses `make_user_prompt` to0 create a prompt that calls GPT 4o with the response format set to the `DealSelection` class to make sure the result is retuned in the correct format. Returns any deals that are greater than zero dollars, or None if there aren't any.
+
+#### Messaging Agent
+
+Used to send push notifications using [Pushover](https://pushover.net/, which is free for up to 10K messages.
+
+#### Planning Agent
+
+Used to coordinate activities.
+
+#### Agent Framework
 
 ## Productionize
 
