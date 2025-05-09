@@ -21,8 +21,9 @@ Build an Autonomous Agentic AI framework
 - Our frontier-busting fine-tuned model with estimate prices
 - We'll also use a Frontier Model with a massive RAG db
 
+**Custom Agentic AI Framework**
+
 <img src="./images/agent-workflow.jpg" alt="Agent Workflow" />
-Custom Agentic AI Framework
 
 ## Apply the 5 Step Strategy
 
@@ -36,7 +37,7 @@ For selecting, training and applying an LLM to a commercial problem.
 
 ### How will we evaluate performance?
 
-From our Predicted Proces verses Actual prices.
+From our Predicted Prices verses Actual prices.
 
 **Model-centric or Technical Metrics**:
 
@@ -46,11 +47,11 @@ From our Predicted Proces verses Actual prices.
 
 **Business-centric or Outcome Metrics**
 
-- Average price difference: belongs in both types of metrics and is very simple and understandable by humans so a great business outcome metric. Flawed for comparing higher and lower price items like prediction $50 off for $800 product is a good result but on a $10 product a %50 error is quite significant
-- % price difference: ok for high price items but not so good for low price items since a small price difference with be high %, e.g. $10 predicted as $12 is 20% out which is a bit harsh
-- % estimate that are "good": create a criteria used to judge that estimate is good quality and criteria could combine an absolute diff and a % diff, e.g. either within $40 or 20% then considered a good enough estimate, then measure what % of the model's predictions meet this criteria
+- Average price difference: belongs in both types of metrics and is very simple and understandable by humans so a great business outcome metric. Flawed for comparing higher and lower price items like prediction \$50 off for $800 product is a good result but on a \$10 product a 50% error is quite significant
+- % price difference: ok for high price items but not so good for low price items since a small price difference with be high %, e.g. \$10 predicted as \$12 is 20% out which is a bit harsh
+- % estimate that are "good": create a criteria used to judge that estimate is good quality and criteria could combine an absolute diff and a % diff, e.g. either within \$40 or 20% then considered a good enough estimate, then measure what % of the model's predictions meet this criteria
 
-Note: simpler test is [mean squared error (MSE)](https://en.wikipedia.org/wiki/Root_mean_square_deviation), which is the square of the difference between the predeiction and the actual price. The challenge with MSE is that is blows up for larger prices, e.g. product costs $800 and predict $900 with diff od $100 then square of 100 is 10,000 wich is a big number and dwarf all other errors. So is not a good fit for this kind of problem.
+Note: simpler test is [mean squared error (MSE)](https://en.wikipedia.org/wiki/Root_mean_square_deviation), which is the square of the difference between the prediction and the actual price. The challenge with MSE is that is blows up for larger prices, e.g. product costs \$800 and predict \$900 with diff of \$100 then square of 100 is 10,000 which is a big number and dwarf all other errors. So is not a good fit for this kind of problem.
 
 ### Data Curation
 
@@ -61,7 +62,8 @@ Resources:
 - Use a variety of [colors in matplotlib charts](https://matplotlib.org/stable/gallery/color/named_colors.html)
 
 See charts and graphs inline:
-%matplotlib inline
+
+    %matplotlib inline
 
 Custom classes:
 
@@ -70,17 +72,18 @@ Custom classes:
 - [Tester](.\classes\testing.py)
 
 Dependencies:
-import os
-import random
-from dotenv import load_dotenv
-from huggingface_hub import login
-from datasets import load_dataset, Dataset, DatasetDict
-import matplotlib.pyplot as plt
-from collections import Counter, defaultdict
-import numpy as np
-import pickle
-from loaders import ItemLoader
-from items import Item
+
+    import os
+    import random
+    from dotenv import load_dotenv
+    from huggingface_hub import login
+    from datasets import load_dataset, Dataset, DatasetDict
+    import matplotlib.pyplot as plt
+    from collections import Counter, defaultdict
+    import numpy as np
+    import pickle
+    from loaders import ItemLoader
+    from items import Item
 
 #### Part 1
 
@@ -92,92 +95,105 @@ Steps:
 
 1. Load in our dataset:
 
-   dataset = load_dataset("McAuley-Lab/Amazon-Reviews-2023", f"raw_meta_Appliances", split="full", trust_remote_code=True)
-   print(f"Number of Appliances: {len(dataset):,}")
-   Number of Appliances: 94,327
+```
+dataset = load_dataset("McAuley-Lab/Amazon-Reviews-2023", f"raw_meta_Appliances", split="full", trust_remote_code=True)
+print(f"Number of Appliances: {len(dataset):,}")
+Number of Appliances: 94,327
+```
 
 2. Investigate a particular datapoint:
 
-   datapoint = dataset[2]
-   print(datapoint["title"])
-   print(datapoint["description"])
-   print(datapoint["features"])
-   print(datapoint["details"])
-   print(datapoint["price"])
+```
+datapoint = dataset[2]
+print(datapoint["title"])
+print(datapoint["description"])
+print(datapoint["features"])
+print(datapoint["details"])
+print(datapoint["price"])
+```
 
-   > Clothes Dryer Drum Slide, General Electric, Hotpoint, WE1M333, WE1M504
-   >
-   > ['Brand new dryer drum slide, replaces General Electric, Hotpoint, RCA, WE1M333, WE1M504.']
-   > []
-   > {"Manufacturer": "RPI", "Part Number": "WE1M333,", "Item Weight": "0.352 ounces", "Package Dimensions": "5.5 x 4.7 x 0.4 inches", "Item model number": "WE1M333,", "Is Discontinued By Manufacturer": "No", "Item Package Quantity": "1", "Batteries Included?": "No", "Batteries Required?": "No", "Best Sellers Rank": {"Tools & Home Improvement": 1315213, "Parts & Accessories": 181194}, "Date First Available": "February 25, 2014"}
-   >
-   > None
+> Clothes Dryer Drum Slide, General Electric, Hotpoint, WE1M333, WE1M504
+>
+> ['Brand new dryer drum slide, replaces General Electric, Hotpoint, RCA, WE1M333, WE1M504.']
+> []
+> {"Manufacturer": "RPI", "Part Number": "WE1M333,", "Item Weight": "0.352 ounces", "Package Dimensions": "5.5 x 4.7 x 0.4 inches", "Item model number": "WE1M333,", "Is Discontinued By Manufacturer": "No", "Item Package Quantity": "1", "Batteries Included?": "No", "Batteries Required?": "No", "Best Sellers Rank": {"Tools & Home Improvement": 1315213, "Parts & Accessories": 181194}, "Date First Available": "February 25, 2014"}
+>
+> None
 
 3. How many have prices? Are there enough for training, validation, and testing?
 
-   prices = 0
-   for datapoint in dataset:
-   try:
-   price = float(datapoint["price"])
-   if price > 0:
-   prices += 1
-   except ValueError as e:
-   pass
+```
+prices = 0
+for datapoint in dataset:
+    try:
+        price = float(datapoint["price"])
+        if price > 0:
+            prices += 1
+    except ValueError as e:
+        pass
 
-   print(f"There are {prices:,} with prices which is {prices/len(dataset)\*100:,.1f}%")
+print(f"There are {prices:,} with prices which is {prices/len(dataset)\*100:,.1f}%")
+```
 
-   > There are 46,726 with prices which is 49.5%
+> There are 46,726 with prices which is 49.5%
 
 4. For those with prices, gather the price and the length:
 
-   prices = []
-   lengths = []
-   for datapoint in dataset:
-   try:
-   price = float(datapoint["price"])
-   if price > 0:
-   prices.append(price)
-   contents = datapoint["title"] + str(datapoint["description"]) + str(datapoint["features"]) + str(datapoint["details"])
-   lengths.append(len(contents))
-   except ValueError as e:
-   pass
+```
+prices = []
+lengths = []
+for datapoint in dataset:
+    try:
+        price = float(datapoint["price"])
+        if price > 0:
+            prices.append(price)
+            contents = datapoint["title"] + str(datapoint["description"]) + str(datapoint["features"]) + str(datapoint["details"])
+            lengths.append(len(contents))
+    except ValueError as e:
+        pass
+```
 
 5. Plot the distribution of lengths:
 
-   plt.figure(figsize=(15, 6))
-   plt.title(f"Lengths: Avg {sum(lengths)/len(lengths):,.0f} and highest {max(lengths):,}\n")
-   plt.xlabel('Length (chars)')
-   plt.ylabel('Count')
-   plt.hist(lengths, rwidth=0.7, color="lightblue", bins=range(0, 6000, 100))
-   plt.show()
+```
+plt.figure(figsize=(15, 6))
+plt.title(f"Lengths: Avg {sum(lengths)/len(lengths):,.0f} and highest {max(lengths):,}\n")
+plt.xlabel('Length (chars)')
+plt.ylabel('Count')
+plt.hist(lengths, rwidth=0.7, color="lightblue", bins=range(0, 6000, 100))
+plt.show()
+```
 
-   <img src="./images/Product-Pricer-Curation-Part-1-Length-Distribution.jpg" alt="Distribution of Content Length" />
+<img src="./images/Product-Pricer-Curation-Part-1-Length-Distribution.jpg" alt="Distribution of Content Length" />
 
 6. Plot the distribution of prices:
 
-   plt.figure(figsize=(15, 6))
-   plt.title(f"Prices: Avg {sum(prices)/len(prices):,.2f} and highest {max(prices):,}\n")
-   plt.xlabel('Price ($)')
-   plt.ylabel('Count')
-   plt.hist(prices, rwidth=0.7, color="orange", bins=range(0, 1000, 10))
-   plt.show()
-
-   <img src="./images/Product-Pricer-Curation-Part-1-Price-Distribution.jpg" alt="Distribution of Prices" />
+```
+plt.figure(figsize=(15, 6))
+plt.title(f"Prices: Avg {sum(prices)/len(prices):,.2f} and highest {max(prices):,}\n")
+plt.xlabel('Price ($)')
+plt.ylabel('Count')
+plt.hist(prices, rwidth=0.7, color="orange", bins=range(0, 1000, 10))
+plt.show()
+```
+<img src="./images/Product-Pricer-Curation-Part-1-Price-Distribution.jpg" alt="Distribution of Prices" />
 
 7. Identify highly priced outliers:
 
-   for datapoint in dataset:
-   try:
-   price = float(datapoint["price"])
-   if price > 21000:
-   print(datapoint['title'])
-   print(datapoint["price"])
-   except ValueError as e:
-   pass
+```
+for datapoint in dataset:
+    try:
+        price = float(datapoint["price"])
+        if price > 21000:
+            print(datapoint['title'])
+            print(datapoint["price"])
+    except ValueError as e:
+        pass
+```
 
-   > TurboChef BULLET Rapid Cook Electric Microwave Convection Oven
-   >
-   > 21095.62
+> TurboChef BULLET Rapid Cook Electric Microwave Convection Oven
+>
+> 21095.62
 
 ##### Curate Dataset
 
@@ -196,7 +212,7 @@ Start with a number that seemed reasonable, and experiment with a few variations
 
 There's another interesting reason why we might favor a lower number of tokens in the training data. When we eventually get to use our model at inference time, we'll want to provide new products and have it estimate a price. And we'll be using short descriptions of products - like 1-2 sentences. For best performance, we should size our training data to be similar to the inputs we will provide at inference time.
 
-_But I see in items.py it constrains inputs to 160 tokens?_
+_But I see in [items.py](https://github.com/jstoops/product-pricing-agent/blob/main/testing/items.py) it constrains inputs to 160 tokens?_
 
 **The answer**: The description of the products is limited to 160 tokens because we add some more text before and after the description to turn it into a prompt. That brings it to around 180 tokens in total.
 
@@ -204,74 +220,80 @@ Steps:
 
 1. Create an Item object for each with a price:
 
-   items = []
-   for datapoint in dataset:
-   try:
-   price = float(datapoint["price"])
-   if price > 0:
-   item = Item(datapoint, price)
-   if item.include:
-   items.append(item)
-   except ValueError as e:
-   pass
+```
+items = []
+for datapoint in dataset:
+    try:
+        price = float(datapoint["price"])
+        if price > 0:
+            item = Item(datapoint, price)
+            if item.include:
+                items.append(item)
+    except ValueError as e:
+        pass
 
-   print(f"There are {len(items):,} items")
+print(f"There are {len(items):,} items")
+```
 
-   > There are 29,191 items
+> There are 29,191 items
 
 2. Look at the first item:
 
-   items[1]
+`items[1]`
 
-   > <WP67003405 67003405 Door Pivot Block - Compatible Kenmore KitchenAid Maytag Whirlpool Refrigerator - Replaces AP6010352 8208254 PS11743531 - Quick DIY Repair Solution = $16.52>
+> <WP67003405 67003405 Door Pivot Block - Compatible Kenmore KitchenAid Maytag Whirlpool Refrigerator - Replaces AP6010352 8208254 PS11743531 - Quick DIY Repair Solution = $16.52>
 
 3. Investigate the prompt that will be used during training - the model learns to complete this:
 
-   print(items[100].prompt)
+`print(items[100].prompt)`
 
-   > How much does this cost to the nearest dollar?
-   >
-   > Samsung Assembly Ice Maker-Mech
-   >
-   > This is an O.E.M. Authorized part, fits with various Samsung brand models, oem part # this product in manufactured in south Korea. This is an O.E.M. Authorized part Fits with various Samsung brand models Oem part # This is a Samsung replacement part Part Number This is an O.E.M. part Manufacturer J&J International Inc., Part Weight 1 pounds, Dimensions 18 x 12 x 6 inches, model number Is Discontinued No, Color White, Material Acrylonitrile Butadiene Styrene, Quantity 1, Certification Certified frustration-free, Included Components Refrigerator-replacement-parts, Rank Tools & Home Improvement Parts & Accessories 31211, Available April 21, 2011
-   >
-   > Price is $118.00
+> How much does this cost to the nearest dollar?
+>
+> Samsung Assembly Ice Maker-Mech
+>
+> This is an O.E.M. Authorized part, fits with various Samsung brand models, oem part # this product in manufactured in south Korea. This is an O.E.M. Authorized part Fits with various Samsung brand models Oem part # This is a Samsung replacement part Part Number This is an O.E.M. part Manufacturer J&J International Inc., Part Weight 1 pounds, Dimensions 18 x 12 x 6 inches, model number Is Discontinued No, Color White, Material Acrylonitrile Butadiene Styrene, Quantity 1, Certification Certified frustration-free, Included Components Refrigerator-replacement-parts, Rank Tools & Home Improvement Parts & Accessories 31211, Available April 21, 2011
+>
+> Price is $118.00
 
 4. Investigate the prompt that will be used during testing - the model has to complete this:
 
-   print(items[100].test_prompt())
+`print(items[100].test_prompt())`
 
-   > How much does this cost to the nearest dollar?
-   >
-   > Samsung Assembly Ice Maker-Mech
-   >
-   > This is an O.E.M. Authorized part, fits with various Samsung brand models, oem part # this product in manufactured in south Korea. This is an O.E.M. Authorized part Fits with various Samsung brand models Oem part # This is a Samsung replacement part Part Number This is an O.E.M. part Manufacturer J&J International Inc., Part Weight 1 pounds, Dimensions 18 x 12 x 6 inches, model number Is Discontinued No, Color White, Material Acrylonitrile Butadiene Styrene, Quantity 1, Certification Certified frustration-free, Included Components Refrigerator-replacement-parts, Rank Tools & Home Improvement Parts & Accessories 31211, Available April 21, 2011
-   >
-   > Price is $
+> How much does this cost to the nearest dollar?
+>
+> Samsung Assembly Ice Maker-Mech
+>
+> This is an O.E.M. Authorized part, fits with various Samsung brand models, oem part # this product in manufactured in south Korea. This is an O.E.M. Authorized part Fits with various Samsung brand models Oem part # This is a Samsung replacement part Part Number This is an O.E.M. part Manufacturer J&J International Inc., Part Weight 1 pounds, Dimensions 18 x 12 x 6 inches, model number Is Discontinued No, Color White, Material Acrylonitrile Butadiene Styrene, Quantity 1, Certification Certified frustration-free, Included Components Refrigerator-replacement-parts, Rank Tools & Home Improvement Parts & Accessories 31211, Available April 21, 2011
+>
+> Price is $
 
 5. Plot the distribution of token counts:
 
-   tokens = [item.token_count for item in items]
-   plt.figure(figsize=(15, 6))
-   plt.title(f"Token counts: Avg {sum(tokens)/len(tokens):,.1f} and highest {max(tokens):,}\n")
-   plt.xlabel('Length (tokens)')
-   plt.ylabel('Count')
-   plt.hist(tokens, rwidth=0.7, color="green", bins=range(0, 300, 10))
-   plt.show()
+```
+tokens = [item.token_count for item in items]
+plt.figure(figsize=(15, 6))
+plt.title(f"Token counts: Avg {sum(tokens)/len(tokens):,.1f} and highest {max(tokens):,}\n")
+plt.xlabel('Length (tokens)')
+plt.ylabel('Count')
+plt.hist(tokens, rwidth=0.7, color="green", bins=range(0, 300, 10))
+plt.show()
+```
 
-   <img src="./images/Product-Pricer-Curation-Part-1-Token-Distribution.jpg" alt="Distribution of Tokens" />
+<img src="./images/Product-Pricer-Curation-Part-1-Token-Distribution.jpg" alt="Distribution of Tokens" />
 
 6. Plot the distribution of prices:
 
-   prices = [item.price for item in items]
-   plt.figure(figsize=(15, 6))
-   plt.title(f"Prices: Avg {sum(prices)/len(prices):,.1f} and highest {max(prices):,}\n")
-   plt.xlabel('Price ($)')
-   plt.ylabel('Count')
-   plt.hist(prices, rwidth=0.7, color="purple", bins=range(0, 300, 10))
-   plt.show()
+```
+prices = [item.price for item in items]
+plt.figure(figsize=(15, 6))
+plt.title(f"Prices: Avg {sum(prices)/len(prices):,.1f} and highest {max(prices):,}\n")
+plt.xlabel('Price ($)')
+plt.ylabel('Count')
+plt.hist(prices, rwidth=0.7, color="purple", bins=range(0, 300, 10))
+plt.show()
+```
 
-   <img src="./images/Product-Pricer-Curation-Part-1-Price-Distribution-Curated.jpg" alt="Distribution of Prices After Being Curated to Between 1 and 999 USD" />
+<img src="./images/Product-Pricer-Curation-Part-1-Price-Distribution-Curated.jpg" alt="Distribution of Prices After Being Curated to Between 1 and 999 USD" />
 
 #### Part 2
 
@@ -287,67 +309,69 @@ Data curation can seem less exciting than other things we work on, but it's a cr
 
 1. Load in the same dataset as last time
 
-   items = ItemLoader("Appliances").load()
+`items = ItemLoader("Appliances").load()`
 
-   > Completed Appliances with 28,625 datapoints in 0.3 mins
+> Completed Appliances with 28,625 datapoints in 0.3 mins
 
 2. Look for a familiar item..
 
-   print(items[1].prompt)
+`print(items[1].prompt)`
 
-   > How much does this cost to the nearest dollar?
-   >
-   > Door Pivot Block - Compatible Kenmore KitchenAid Maytag Whirlpool Refrigerator - Replaces - Quick DIY Repair Solution
-   >
-   > Pivot Block For Vernicle Mullion Strip On Door - A high-quality exact equivalent for part numbers and Compatibility with major brands - Door Guide is compatible with Whirlpool, Amana, Dacor, Gaggenau, Hardwick, Jenn-Air, Kenmore, KitchenAid, and Maytag. Quick DIY repair - Refrigerator Door Guide Pivot Block Replacement will help if your appliance door doesn't open or close. Wear work gloves to protect your hands during the repair process. Attentive support - If you are uncertain about whether the block fits your refrigerator, we will help. We generally put forth a valiant effort to guarantee you are totally
-   >
-   > Price is $17.00
+> How much does this cost to the nearest dollar?
+>
+> Door Pivot Block - Compatible Kenmore KitchenAid Maytag Whirlpool Refrigerator - Replaces - Quick DIY Repair Solution
+>
+> Pivot Block For Vernicle Mullion Strip On Door - A high-quality exact equivalent for part numbers and Compatibility with major brands - Door Guide is compatible with Whirlpool, Amana, Dacor, Gaggenau, Hardwick, Jenn-Air, Kenmore, KitchenAid, and Maytag. Quick DIY repair - Refrigerator Door Guide Pivot Block Replacement will help if your appliance door doesn't open or close. Wear work gloves to protect your hands during the repair process. Attentive support - If you are uncertain about whether the block fits your refrigerator, we will help. We generally put forth a valiant effort to guarantee you are totally
+>
+> Price is $17.00
 
 3. Scale up by looking at all datasets of all the items that you might find in a large home retail store - electrical, electronic, office and related, but not clothes / beauty / books:
 
-   dataset_names = [
-   "Automotive",
-   "Electronics",
-   "Office_Products",
-   "Tools_and_Home_Improvement",
-   "Cell_Phones_and_Accessories",
-   "Toys_and_Games",
-   "Appliances",
-   "Musical_Instruments",
-   ]
+```
+dataset_names = [
+    "Automotive",
+    "Electronics",
+    "Office_Products",
+    "Tools_and_Home_Improvement",
+    "Cell_Phones_and_Accessories",
+    "Toys_and_Games",
+    "Appliances",
+    "Musical_Instruments",
+]
 
-   items = []
-   for dataset_name in dataset_names:
-   loader = ItemLoader(dataset_name)
-   items.extend(loader.load())
+items = []
+for dataset_name in dataset_names:
+    loader = ItemLoader(dataset_name)
+    items.extend(loader.load())
+```
 
-   > Loading dataset Automotive
-   > Completed Automotive with 911,688 datapoints in 11.3 mins
-   >
-   > Loading dataset Electronics
-   > Completed Electronics with 443,473 datapoints in 9.5 mins
-   >
-   > Loading dataset Office_Products
-   > Completed Office_Products with 240,394 datapoints in 3.6 mins
-   >
-   > Loading dataset Tools_and_Home_Improvement
-   > Completed Tools_and_Home_Improvement with 541,051 datapoints in 8.5 mins
-   >
-   > Loading dataset Cell_Phones_and_Accessories
-   > Completed Cell_Phones_and_Accessories with 238,869 datapoints in 7.1 mins
-   >
-   > Loading dataset Toys_and_Games
-   > Completed Toys_and_Games with 340,479 datapoints in 4.6 mins
-   >
-   > Loading dataset Appliances
-   > Completed Appliances with 28,625 datapoints in 0.3 mins
-   >
-   > Loading dataset Musical_Instruments
-   > Completed Musical_Instruments with 66,829 datapoints in 1.1 mins
+> Loading dataset Automotive
+> Completed Automotive with 911,688 datapoints in 11.3 mins
+>
+> Loading dataset Electronics
+> Completed Electronics with 443,473 datapoints in 9.5 mins
+>
+> Loading dataset Office_Products
+> Completed Office_Products with 240,394 datapoints in 3.6 mins
+>
+> Loading dataset Tools_and_Home_Improvement
+> Completed Tools_and_Home_Improvement with 541,051 datapoints in 8.5 mins
+>
+> Loading dataset Cell_Phones_and_Accessories
+> Completed Cell_Phones_and_Accessories with 238,869 datapoints in 7.1 mins
+>
+> Loading dataset Toys_and_Games
+> Completed Toys_and_Games with 340,479 datapoints in 4.6 mins
+>
+> Loading dataset Appliances
+> Completed Appliances with 28,625 datapoints in 0.3 mins
+>
+> Loading dataset Musical_Instruments
+> Completed Musical_Instruments with 66,829 datapoints in 1.1 mins
 
-   print(f"A grand total of {len(items):,} items")
+`print(f"A grand total of {len(items):,} items")`
 
-   > A grand total of 2,811,408 items
+> A grand total of 2,811,408 items
 
 4. Plot the distribution of token counts again
 
@@ -357,32 +381,36 @@ Data curation can seem less exciting than other things we work on, but it's a cr
 
 6. Counter number of items in each product type category:
 
-   category_counts = Counter()
-   for item in items:
-   category_counts[item.category]+=1
+```
+category_counts = Counter()
+for item in items:
+    category_counts[item.category]+=1
 
-   categories = category_counts.keys()
-   counts = [category_counts[category] for category in categories]
+categories = category_counts.keys()
+counts = [category_counts[category] for category in categories]
+```
 
 7. Plot number of items in each category:
 
-   \# Bar chart by category
-   plt.figure(figsize=(15, 6))
-   plt.bar(categories, counts, color="goldenrod")
-   plt.title('How many in each category')
-   plt.xlabel('Categories')
-   plt.ylabel('Count')
+```
+\# Bar chart by category
+plt.figure(figsize=(15, 6))
+plt.bar(categories, counts, color="goldenrod")
+plt.title('How many in each category')
+plt.xlabel('Categories')
+plt.ylabel('Count')
 
-   plt.xticks(rotation=30, ha='right')
+plt.xticks(rotation=30, ha='right')
 
-   \# Add value labels on top of each bar
-   for i, v in enumerate(counts):
-   plt.text(i, v, f"{v:,}", ha='center', va='bottom')
+\# Add value labels on top of each bar
+for i, v in enumerate(counts):
+    plt.text(i, v, f"{v:,}", ha='center', va='bottom')
 
-   \# Display the chart
-   plt.show()
+\# Display the chart
+plt.show()
+```
 
-   <img src="./images/Product-Pricer-Curation-Part-2-Item-Distribution.jpg" alt="Distribution of Items Across Categories" />
+<img src="./images/Product-Pricer-Curation-Part-2-Item-Distribution.jpg" alt="Distribution of Items Across Categories" />
 
 ##### Balance Dataset
 
@@ -390,33 +418,37 @@ Data curation can seem less exciting than other things we work on, but it's a cr
 
 1. Create a dict with a key of each price from $1 to $999 and in the value, put a list of items with that price (to nearest round number):
 
-   slots = defaultdict(list)
-   for item in items:
-   slots[round(item.price)].append(item)
+```
+slots = defaultdict(list)
+for item in items:
+    slots[round(item.price)].append(item)
+```
 
 2. Create a dataset called "sample" which tries to more evenly take from the range of prices and gives more weight to items from categories other than Automotive:
 
-   /# Set random seed for reproducibility
-   np.random.seed(42)
-   random.seed(42)
+```
+/# Set random seed for reproducibility
+np.random.seed(42)
+random.seed(42)
 
-   sample = []
-   for i in range(1, 1000):
-   slot = slots[i]
-   if i>=240:
-   sample.extend(slot)
-   elif len(slot) <= 1200:
-   sample.extend(slot)
-   else:
-   weights = np.array([1 if item.category=='Automotive' else 5 for item in slot])
-   weights = weights / np.sum(weights)
-   selected_indices = np.random.choice(len(slot), size=1200, replace=False, p=weights)
-   selected = [slot[i] for i in selected_indices]
-   sample.extend(selected)
+sample = []
+for i in range(1, 1000):
+    slot = slots[i]
+    if i>=240:
+        sample.extend(slot)
+    elif len(slot) <= 1200:
+        sample.extend(slot)
+    else:
+        weights = np.array([1 if item.category=='Automotive' else 5 for item in slot])
+        weights = weights / np.sum(weights)
+        selected_indices = np.random.choice(len(slot), size=1200, replace=False, p=weights)
+        selected = [slot[i] for i in selected_indices]
+        sample.extend(selected)
 
-   print(f"There are {len(sample):,} items in the sample")
+print(f"There are {len(sample):,} items in the sample")
+```
 
-   > There are 408,635 items in the sample
+> There are 408,635 items in the sample
 
 3. Plot the distribution of prices in sample:
 
@@ -434,41 +466,45 @@ Automotive still in the lead, but improved somewhat
 
 6. How does the price vary with the character count of the prompt?
 
-   sizes = [len(item.prompt) for item in sample]
-   prices = [item.price for item in sample]
+```
+sizes = [len(item.prompt) for item in sample]
+prices = [item.price for item in sample]
 
-   \# Create the scatter plot
-   plt.figure(figsize=(15, 8))
-   plt.scatter(sizes, prices, s=0.2, color="red")
+\# Create the scatter plot
+plt.figure(figsize=(15, 8))
+plt.scatter(sizes, prices, s=0.2, color="red")
 
-   \# Add labels and title
-   plt.xlabel('Size')
-   plt.ylabel('Price')
-   plt.title('Is there a simple correlation?')
+\# Add labels and title
+plt.xlabel('Size')
+plt.ylabel('Price')
+plt.title('Is there a simple correlation?')
 
-   \# Display the plot
-   plt.show()
+\# Display the plot
+plt.show()
+```
 
-   <img src="./images/Product-Pricer-Curation-Part-2-Price-to-Character-Count-Prompt.jpg" alt="Price to Character Count Correlation" />
+<img src="./images/Product-Pricer-Curation-Part-2-Price-to-Character-Count-Prompt.jpg" alt="Price to Character Count Correlation" />
 
 7. Check token count for price in prompt:
 
-   def report(item):
-   prompt = item.prompt
-   tokens = Item.tokenizer.encode(item.prompt)
-   print(prompt)
-   print(tokens[-10:])
-   print(Item.tokenizer.batch_decode(tokens[-10:]))
+```
+def report(item):
+    prompt = item.prompt
+    tokens = Item.tokenizer.encode(item.prompt)
+    print(prompt)
+    print(tokens[-10:])
+    print(Item.tokenizer.batch_decode(tokens[-10:]))
 
-   report(sample[398000])
+report(sample[398000])
+```
 
-   > How much does this cost to the nearest dollar?
-   >
-   > MonoRS Coilovers Lowering Kit Made For Scion FRS Fully Adjustable, Set of 4
-   > MonoRS Coilover damper kit by Godspeed Project are intermediate suspension upgrade setup for daily and Sunday club racing. Lowering your car with improved springs over factory and paired with Mono-tubo shocks with valving that allows 32 levels of rebound adjustment to improve handling without sacrifice comfort. Ride height can easily be adjusted by twisting the lower mount bracket. In order to keep weight gain at the minimum, most of attachments and accessories are CNC machined from billet aluminum. Koyo bearings are used when camber plate top mount is applicable depends on car models. To assure that our customers are getting high quality products, MonoRS coilovers are covered by 12 months limited warranty by the manufacturer from
-   >
-   > Price is \$765.00
-   > `[279, 14290, 505, 271, 7117, 374, 400, 22240, 13, 410]` > `[' the', ' manufacturer', ' from', '\n\n', 'Price', ' is', ' $', '765', '.', '00']`
+> How much does this cost to the nearest dollar?
+>
+> MonoRS Coilovers Lowering Kit Made For Scion FRS Fully Adjustable, Set of 4
+> MonoRS Coilover damper kit by Godspeed Project are intermediate suspension upgrade setup for daily and Sunday club racing. Lowering your car with improved springs over factory and paired with Mono-tubo shocks with valving that allows 32 levels of rebound adjustment to improve handling without sacrifice comfort. Ride height can easily be adjusted by twisting the lower mount bracket. In order to keep weight gain at the minimum, most of attachments and accessories are CNC machined from billet aluminum. Koyo bearings are used when camber plate top mount is applicable depends on car models. To assure that our customers are getting high quality products, MonoRS coilovers are covered by 12 months limited warranty by the manufacturer from
+>
+> Price is \$765.00
+> `[279, 14290, 505, 271, 7117, 374, 400, 22240, 13, 410]` > `[' the', ' manufacturer', ' from', '\n\n', 'Price', ' is', ' $', '765', '.', '00']`
 
 **Observation**: An interesting thing about the Llama tokenizer is that every number from 1 to 999 gets mapped to 1 token, much as we saw with gpt-4o. The same is not true of qwen2, gemma and phi3, which all map individual digits to tokens. This does turn out to be a bit useful for our project, although it's not an essential requirement.
 
@@ -480,81 +516,93 @@ It's typical to use 5%-10% of your data for testing purposes, but actually we ha
 
 1. Split sample into training and test datasets:
 
-   random.seed(42)
-   random.shuffle(sample)
-   train = sample[:400_000]
-   test = sample[400_000:402_000]
-   print(f"Divided into a training set of {len(train):,} items and test set of {len(test):,} items")
+```
+random.seed(42)
+random.shuffle(sample)
+train = sample[:400_000]
+test = sample[400_000:402_000]
+print(f"Divided into a training set of {len(train):,} items and test set of {len(test):,} items")
+```
 
-   > Divided into a training set of 400,000 items and test set of 2,000 items
+> Divided into a training set of 400,000 items and test set of 2,000 items
 
 2. Validate training prompt:
 
-   print(train[0].prompt)
+`print(train[0].prompt)`
 
-   > How much does this cost to the nearest dollar?
-   >
-   > Delphi FG0166 Fuel Pump Module
-   > Delphi brings 80 years of OE Heritage into each Delphi pump, ensuring quality and fitment for each Delphi part. Part is validated, tested and matched to the right vehicle application Delphi brings 80 years of OE Heritage into each Delphi assembly, ensuring quality and fitment for each Delphi part Always be sure to check and clean fuel tank to avoid unnecessary returns Rigorous OE-testing ensures the pump can withstand extreme temperatures Brand Delphi, Fit Type Vehicle Specific Fit, Dimensions LxWxH 19.7 x 7.7 x 5.1 inches, Weight 2.2 Pounds, Auto Part Position Unknown, Operation Mode Mechanical, Manufacturer Delphi, Model FUEL PUMP, Dimensions 19.7
-   >
-   > Price is $227.00
+> How much does this cost to the nearest dollar?
+>
+> Delphi FG0166 Fuel Pump Module
+> Delphi brings 80 years of OE Heritage into each Delphi pump, ensuring quality and fitment for each Delphi part. Part is validated, tested and matched to the right vehicle application Delphi brings 80 years of OE Heritage into each Delphi assembly, ensuring quality and fitment for each Delphi part Always be sure to check and clean fuel tank to avoid unnecessary returns Rigorous OE-testing ensures the pump can withstand extreme temperatures Brand Delphi, Fit Type Vehicle Specific Fit, Dimensions LxWxH 19.7 x 7.7 x 5.1 inches, Weight 2.2 Pounds, Auto Part Position Unknown, Operation Mode Mechanical, Manufacturer Delphi, Model FUEL PUMP, Dimensions 19.7
+>
+> Price is $227.00
 
 3. Validate test prompt:
 
-   print(test[0].test_prompt())
+`print(test[0].test_prompt())`
 
-   > How much does this cost to the nearest dollar?
-   >
-   > OEM AC Compressor w/A/C Repair Kit For Ford F150 F-150 V8 & Lincoln Mark LT 2007 2008 - BuyAutoParts NEW
-   > As one of the world's largest automotive parts suppliers, our parts are trusted every day by mechanics and vehicle owners worldwide. This A/C Compressor and Components Kit is manufactured and tested to the strictest OE standards for unparalleled performance. Built for trouble-free ownership and 100% visually inspected and quality tested, this A/C Compressor and Components Kit is backed by our 100% satisfaction guarantee. Guaranteed Exact Fit for easy installation 100% BRAND NEW, premium ISO/TS 16949 quality - tested to meet or exceed OEM specifications Engineered for superior durability, backed by industry-leading unlimited-mileage warranty Included in this K
-   >
-   > Price is $
+> How much does this cost to the nearest dollar?
+>
+> OEM AC Compressor w/A/C Repair Kit For Ford F150 F-150 V8 & Lincoln Mark LT 2007 2008 - BuyAutoParts NEW
+> As one of the world's largest automotive parts suppliers, our parts are trusted every day by mechanics and vehicle owners worldwide. This A/C Compressor and Components Kit is manufactured and tested to the strictest OE standards for unparalleled performance. Built for trouble-free ownership and 100% visually inspected and quality tested, this A/C Compressor and Components Kit is backed by our 100% satisfaction guarantee. Guaranteed Exact Fit for easy installation 100% BRAND NEW, premium ISO/TS 16949 quality - tested to meet or exceed OEM specifications Engineered for superior durability, backed by industry-leading unlimited-mileage warranty Included in this K
+>
+> Price is $
 
 4. Plot the distribution of prices in the first 250 test points
 
-   prices = [float(item.price) for item in test[:250]]
-   plt.figure(figsize=(15, 6))
-   plt.title(f"Avg {sum(prices)/len(prices):.2f} and highest {max(prices):,.2f}\n")
-   plt.xlabel('Price ($)')
-   plt.ylabel('Count')
-   plt.hist(prices, rwidth=0.7, color="darkblue", bins=range(0, 1000, 10))
-   plt.show()
+```
+prices = [float(item.price) for item in test[:250]]
+plt.figure(figsize=(15, 6))
+plt.title(f"Avg {sum(prices)/len(prices):.2f} and highest {max(prices):,.2f}\n")
+plt.xlabel('Price ($)')
+plt.ylabel('Count')
+plt.hist(prices, rwidth=0.7, color="darkblue", bins=range(0, 1000, 10))
+plt.show()
+```
 
-   <img src="./images/Product-Pricer-Curation-Part-2-Price-Distribution-Test-Data.jpg" alt="Distribution of Prices in First 250 Test Points" />
+<img src="./images/Product-Pricer-Curation-Part-2-Price-Distribution-Test-Data.jpg" alt="Distribution of Prices in First 250 Test Points" />
 
 ##### Upload Dataset to HuggingFace Hub
 
 1. Convert to prompts:
 
-   train_prompts = [item.prompt for item in train]
-   train_prices = [item.price for item in train]
-   test_prompts = [item.test_prompt() for item in test]
-   test_prices = [item.price for item in test]
+```
+train_prompts = [item.prompt for item in train]
+train_prices = [item.price for item in train]
+test_prompts = [item.test_prompt() for item in test]
+test_prices = [item.price for item in test]
+```
 
 2. Create a Dataset from the lists:
 
-   train_dataset = Dataset.from_dict({"text": train_prompts, "price": train_prices})
-   test_dataset = Dataset.from_dict({"text": test_prompts, "price": test_prices})
-   dataset = DatasetDict({
-   "train": train_dataset,
-   "test": test_dataset
-   })
+```
+train_dataset = Dataset.from_dict({"text": train_prompts, "price": train_prices})
+test_dataset = Dataset.from_dict({"text": test_prompts, "price": test_prices})
+dataset = DatasetDict({
+  "train": train_dataset,
+  "test": test_dataset
+})
+```
 
 3. Upload to HuggingFace hub:
 
-   HF*USER = "\_my-HF-username*"
-   DATASET_NAME = f"{HF_USER}/pricer-data"
-   dataset.push_to_hub(DATASET_NAME, private=True)
+```
+HF_USER = "my-HF-username"
+DATASET_NAME = f"{HF_USER}/pricer-data"
+dataset.push_to_hub(DATASET_NAME, private=True)
+```
 
 ##### Save Data Locally
 
 Pickle the training and test dataset so we don't have to execute all this code next time:
 
-    with open('train.pkl', 'wb') as file:
-        pickle.dump(train, file)
+```
+with open('train.pkl', 'wb') as file:
+    pickle.dump(train, file)
 
-    with open('test.pkl', 'wb') as file:
-        pickle.dump(test, file)
+with open('test.pkl', 'wb') as file:
+    pickle.dump(test, file)
+```
 
 ### Building ML Baselines for NLP
 
@@ -837,14 +885,14 @@ fine_tune_validation = train[200:250]
 ```
 def messages_for(item):
     system_message = "You estimate prices of items. Reply only with the price, no explanation"
-    user_prompt = item.test_prompt\(\).replace\(" to the nearest dollar",""\).replace\("\\n\\nPrice is \$",""\)
-    return \[
-        \{"role": "system", "content": system_message\},
-        \{"role": "user", "content": user_prompt\},
-        \{"role": "assistant", "content": f"Price is \$\{item.price:.2f\}"\}
-    \]
+    user_prompt = item.test_prompt().replace(" to the nearest dollar","").replace\"\n\nPrice is $","")
+    return [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": user_prompt},
+        {"role": "assistant", "content": f"Price is ${item.price:.2f}"}
+    ]
 
-messages_for\(train\[0\]\)
+messages_for(train[0])
 ```
 
 > [{'role': 'system',
@@ -856,56 +904,63 @@ messages_for\(train\[0\]\)
 
 2. Convert the items into a list of json objects - a "jsonl" string. Each row represents a message in the form: `{"messages" : [{"role": "system", "content": "You estimate prices...`
 
-   def make_jsonl(items):
-   result = ""
-   for item in items:
-   messages = messages_for(item)
-   messages_str = json.dumps(messages)
-   result += '{"messages": ' + messages_str +'}\n'
-   return result.strip()
+```
+def make_jsonl(items):
+    result = ""
+    for item in items:
+        messages = messages_for(item)
+        messages_str = json.dumps(messages)
+        result += '{"messages": ' + messages_str +'}\n'
+    return result.strip()
 
-   print(make_jsonl(train[:3]))
+print(make_jsonl(train[:3]))
+```
 
-   > {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nDelphi FG0166 Fuel Pump Module\nDelphi brings 80 years of OE Heritage into each Delphi pump, ensuring quality and fitment for each Delphi part. Part is validated, tested and matched to the right vehicle application Delphi brings 80 years of OE Heritage into each Delphi assembly, ensuring quality and fitment for each Delphi part Always be sure to check and clean fuel tank to avoid unnecessary returns Rigorous OE-testing ensures the pump can withstand extreme temperatures Brand Delphi, Fit Type Vehicle Specific Fit, Dimensions LxWxH 19.7 x 7.7 x 5.1 inches, Weight 2.2 Pounds, Auto Part Position Unknown, Operation Mode Mechanical, Manufacturer Delphi, Model FUEL PUMP, Dimensions 19.7"}, {"role": "assistant", "content": "Price is $226.95"}]}
-   > {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nPower Stop Rear Z36 Truck and Tow Brake Kit with Calipers\nThe Power Stop Z36 Truck & Tow Performance brake kit provides the superior stopping power demanded by those who tow boats, haul loads, tackle mountains, lift trucks, and play in the harshest conditions. The brake rotors are drilled to keep temperatures down during extreme braking and slotted to sweep away any debris for constant pad contact. Combined with our Z36 Carbon-Fiber Ceramic performance friction formulation, you can confidently push your rig to the limit and look good doing it with red powder brake calipers. Components are engineered to handle the stress of towing, hauling, mountainous driving, and lifted trucks. Dust-free braking performance. Z36 Carbon-Fiber Ceramic formula provides the extreme braking performance demanded by your truck or 4x"}, {"role": "assistant", "content": "Price is $506.98"}]}
-   > {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nABBA 36 Gas Cooktop with 5 Sealed Burners - Tempered Glass Surface with SABAF Burners, Natural Gas Stove for Countertop, Home Improvement Essentials, Easy to Clean, 36 x 4.1 x 20.5\ncooktop Gas powered with 4 fast burners and 1 ultra-fast center burner Tempered glass surface with removable grid for easy cleaning Lightweight for easy installation. Installation Manual Included Counter cutout Dimensions 19 3/8 x 34 1/2 (see diagram) Insured shipping for your satisfaction and peace of mind Brand Name ABBA EST. 1956, Weight 30 pounds, Dimensions 20.5\\ D x 36\\ W x 4.1\\ H, Installation Type Count"}, {"role": "assistant", "content": "Price is $405.00"}]}
+> {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nDelphi FG0166 Fuel Pump Module\nDelphi brings 80 years of OE Heritage into each Delphi pump, ensuring quality and fitment for each Delphi part. Part is validated, tested and matched to the right vehicle application Delphi brings 80 years of OE Heritage into each Delphi assembly, ensuring quality and fitment for each Delphi part Always be sure to check and clean fuel tank to avoid unnecessary returns Rigorous OE-testing ensures the pump can withstand extreme temperatures Brand Delphi, Fit Type Vehicle Specific Fit, Dimensions LxWxH 19.7 x 7.7 x 5.1 inches, Weight 2.2 Pounds, Auto Part Position Unknown, Operation Mode Mechanical, Manufacturer Delphi, Model FUEL PUMP, Dimensions 19.7"}, {"role": "assistant", "content": "Price is $226.95"}]}
+> {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nPower Stop Rear Z36 Truck and Tow Brake Kit with Calipers\nThe Power Stop Z36 Truck & Tow Performance brake kit provides the superior stopping power demanded by those who tow boats, haul loads, tackle mountains, lift trucks, and play in the harshest conditions. The brake rotors are drilled to keep temperatures down during extreme braking and slotted to sweep away any debris for constant pad contact. Combined with our Z36 Carbon-Fiber Ceramic performance friction formulation, you can confidently push your rig to the limit and look good doing it with red powder brake calipers. Components are engineered to handle the stress of towing, hauling, mountainous driving, and lifted trucks. Dust-free braking performance. Z36 Carbon-Fiber Ceramic formula provides the extreme braking performance demanded by your truck or 4x"}, {"role": "assistant", "content": "Price is $506.98"}]}
+> {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nABBA 36 Gas Cooktop with 5 Sealed Burners - Tempered Glass Surface with SABAF Burners, Natural Gas Stove for Countertop, Home Improvement Essentials, Easy to Clean, 36 x 4.1 x 20.5\ncooktop Gas powered with 4 fast burners and 1 ultra-fast center burner Tempered glass surface with removable grid for easy cleaning Lightweight for easy installation. Installation Manual Included Counter cutout Dimensions 19 3/8 x 34 1/2 (see diagram) Insured shipping for your satisfaction and peace of mind Brand Name ABBA EST. 1956, Weight 30 pounds, Dimensions 20.5\\ D x 36\\ W x 4.1\\ H, Installation Type Count"}, {"role": "assistant", "content": "Price is $405.00"}]}
 
 3. Convert the items into jsonl and write them to a file:
 
-   def write_jsonl(items, filename):
-   with open(filename, "w") as f:
-   jsonl = make_jsonl(items)
-   f.write(jsonl)
+```
+def write_jsonl(items, filename):
+    with open(filename, "w") as f:
+        jsonl = make_jsonl(items)
+        f.write(jsonl)
 
-   write_jsonl(fine_tune_train, "fine_tune_train.jsonl")
-   write_jsonl(fine_tune_validation, "fine_tune_validation.jsonl")
+write_jsonl(fine_tune_train, "fine_tune_train.jsonl")
+write_jsonl(fine_tune_validation, "fine_tune_validation.jsonl")
+```
 
 4. Upload training and validation files to to OpenAI:
 
-   with open("fine_tune_train.jsonl", "rb") as f:
-   train_file = openai.files.create(file=f, purpose="fine-tune")
+```
+with open("fine_tune_train.jsonl", "rb") as f:
+train_file = openai.files.create(file=f, purpose="fine-tune")
 
-   train_file
+train_file
+```
 
-   > FileObject(id='file-ANZ1fXNvT9rpFa5HptJ8fp', bytes=188742, created_at=1745807152, filename='fine_tune_train.jsonl', object='file', purpose='fine-tune', status='processed', expires_at=None, status_details=None)
+> FileObject(id='file-ANZ1fXNvT9rpFa5HptJ8fp', bytes=188742, created_at=1745807152, filename='fine_tune_train.jsonl', object='file', purpose='fine-tune', status='processed', expires_at=None, status_details=None)
 
-   with open("fine_tune_validation.jsonl", "rb") as f:
-   validation_file = openai.files.create(file=f, purpose="fine-tune")
+```
+with open("fine_tune_validation.jsonl", "rb") as f:
+validation_file = openai.files.create(file=f, purpose="fine-tune")
 
-   validation_file
+validation_file
+```
 
-   > FileObject(id='file-MGCRJXFiCjosPToMF5ywab', bytes=47085, created_at=1745807167, filename='fine_tune_validation.jsonl', object='file', purpose='fine-tune', status='processed', expires_at=None, status_details=None)
+> FileObject(id='file-MGCRJXFiCjosPToMF5ywab', bytes=47085, created_at=1745807167, filename='fine_tune_validation.jsonl', object='file', purpose='fine-tune', status='processed', expires_at=None, status_details=None)
 
-   Note: rb means open is as a binary file to stream the files to OpenAI
+Note: rb means open is as a binary file to stream the files to OpenAI
 
 #### Step 2: Fine-Tune OpenAI Model
 
 To monitor fine-tuning register [Weights & Biases](https://wandb.ai) key on [OpenAI dashboard](https://platform.openai.com/account/organization) under Integrations on the General settings. Then create a wandb project:
 
-wandb_integration = {"type": "wandb", "wandb": {"project": "gpt-pricer"}}
+`wandb_integration = {"type": "wandb", "wandb": {"project": "gpt-pricer"}}`
 
-Note:
-Validation file not necessary in this case but good to get in the habit of sending it
+Note: Validation file not necessary in this case but good to get in the habit of sending it
 
 - With smaller training datasets usually multiple epochs are run but fixed to 1 below as a good sized trainign set used and can always run more training jobs with new training data. Remove it to let OpenAI decide how many epochs to use (number of traiing runs with data provided).
 - Hyperparameters are what data scientists call the extra knobs and wheels and settings that control how your training is going to work. Any extra parameter you can set try different posibilities to see if it makes the model better or worse. This process of tryign our different values for better or worse is called _hyperparameter optimization_ or _hyperparameter tuning_, which is just fancy talk to _trial and error_.
@@ -914,67 +969,75 @@ Validation file not necessary in this case but good to get in the habit of sendi
 
 1. Execute fine tuning job:
 
-   openai.fine_tuning.jobs.create(
-   training_file=train_file.id,
-   validation_file=validation_file.id,
-   model="gpt-4o-mini-2024-07-18",
-   seed=42,
-   hyperparameters={"n_epochs": 1},
-   integrations = [wandb_integration],
-   suffix="pricer"
-   )
+```
+openai.fine_tuning.jobs.create(
+  training_file=train_file.id,
+  validation_file=validation_file.id,
+  model="gpt-4o-mini-2024-07-18",
+  seed=42,
+  hyperparameters={"n_epochs": 1},
+  integrations = [wandb_integration],
+  suffix="pricer"
+)
+```
 
-   > FineTuningJob(id='ftjob-PANNaovITUNfgU2fPnALCEDL', created_at=1745810086, error=Error(code=None, message=None, param=None), fine_tuned_model=None, finished_at=None, hyperparameters=Hyperparameters(batch_size='auto', learning_rate_multiplier='auto', n_epochs=1), model='gpt-4o-mini-2024-07-18', object='fine_tuning.job', organization_id='org-UqfuFiZ3lRmy0bdF1SFE6SyU', result_files=[], seed=42, status='validating_files', trained_tokens=None, training_file='file-ANZ1fXNvT9rpFa5HptJ8fp', validation_file='file-MGCRJXFiCjosPToMF5ywab', estimated_finish=None, integrations=[FineTuningJobWandbIntegrationObject(type='wandb', wandb=FineTuningJobWandbIntegration(project='gpt-pricer', entity=None, name=None, tags=None, run_id='ftjob-PANNaovITUNfgU2fPnALCEDL'))], metadata=None, method=Method(dpo=None, supervised=MethodSupervised(hyperparameters=MethodSupervisedHyperparameters(batch_size='auto', learning_rate_multiplier='auto', n_epochs=1)), type='supervised'), user_provided_suffix='pricer')
+> FineTuningJob(id='ftjob-PANNaovITUNfgU2fPnALCEDL', created_at=1745810086, error=Error(code=None, message=None, param=None), fine_tuned_model=None, finished_at=None, hyperparameters=Hyperparameters(batch_size='auto', learning_rate_multiplier='auto', n_epochs=1), model='gpt-4o-mini-2024-07-18', object='fine_tuning.job', organization_id='org-UqfuFiZ3lRmy0bdF1SFE6SyU', result_files=[], seed=42, status='validating_files', trained_tokens=None, training_file='file-ANZ1fXNvT9rpFa5HptJ8fp', validation_file='file-MGCRJXFiCjosPToMF5ywab', estimated_finish=None, integrations=[FineTuningJobWandbIntegrationObject(type='wandb', wandb=FineTuningJobWandbIntegration(project='gpt-pricer', entity=None, name=None, tags=None, run_id='ftjob-PANNaovITUNfgU2fPnALCEDL'))], metadata=None, method=Method(dpo=None, supervised=MethodSupervised(hyperparameters=MethodSupervisedHyperparameters(batch_size='auto', learning_rate_multiplier='auto', n_epochs=1)), type='supervised'), user_provided_suffix='pricer')
 
-   \# Show list of current fine-tuning jobs:
-   openai.fine_tuning.jobs.list(limit=1)
+```
+# Show list of current fine-tuning jobs:
+openai.fine_tuning.jobs.list(limit=1)
+```
 
-   > SyncCursorPage[FineTuningJob](data=[FineTuningJob(id='ftjob-PANNaovITUNfgU2fPnALCEDL', created_at=1745810086, error=Error(code=None, message=None, param=None), fine_tuned_model=None, finished_at=None, hyperparameters=Hyperparameters(batch_size='auto', learning_rate_multiplier='auto', n_epochs=1), model='gpt-4o-mini-2024-07-18', object='fine_tuning.job', organization_id='org-UqfuFiZ3lRmy0bdF1SFE6SyU', result_files=[], seed=42, status='validating_files', trained_tokens=None, training_file='file-ANZ1fXNvT9rpFa5HptJ8fp', validation_file='file-MGCRJXFiCjosPToMF5ywab', estimated_finish=None, integrations=[FineTuningJobWandbIntegrationObject(type='wandb', wandb=FineTuningJobWandbIntegration(project='gpt-pricer', entity=None, name=None, tags=None, run_id='ftjob-PANNaovITUNfgU2fPnALCEDL'))], metadata=None, method=Method(dpo=None, supervised=MethodSupervised(hyperparameters=MethodSupervisedHyperparameters(batch_size='auto', learning_rate_multiplier='auto', n_epochs=1)), type='supervised'), user_provided_suffix='pricer')], has_more=False, object='list')
+> SyncCursorPage[FineTuningJob](data=[FineTuningJob(id='ftjob-PANNaovITUNfgU2fPnALCEDL', created_at=1745810086, error=Error(code=None, message=None, param=None), fine_tuned_model=None, finished_at=None, hyperparameters=Hyperparameters(batch_size='auto', learning_rate_multiplier='auto', n_epochs=1), model='gpt-4o-mini-2024-07-18', object='fine_tuning.job', organization_id='org-UqfuFiZ3lRmy0bdF1SFE6SyU', result_files=[], seed=42, status='validating_files', trained_tokens=None, training_file='file-ANZ1fXNvT9rpFa5HptJ8fp', validation_file='file-MGCRJXFiCjosPToMF5ywab', estimated_finish=None, integrations=[FineTuningJobWandbIntegrationObject(type='wandb', wandb=FineTuningJobWandbIntegration(project='gpt-pricer', entity=None, name=None, tags=None, run_id='ftjob-PANNaovITUNfgU2fPnALCEDL'))], metadata=None, method=Method(dpo=None, supervised=MethodSupervised(hyperparameters=MethodSupervisedHyperparameters(batch_size='auto', learning_rate_multiplier='auto', n_epochs=1)), type='supervised'), user_provided_suffix='pricer')], has_more=False, object='list')
 
-   \# Set variable for the current job ID:
-   job_id = openai.fine_tuning.jobs.list(limit=1).data[0].id
-   job_id
+```
+# Set variable for the current job ID:
+job_id = openai.fine_tuning.jobs.list(limit=1).data[0].id
+job_id
+```
 
-   > 'ftjob-PANNaovITUNfgU2fPnALCEDL'
+> 'ftjob-PANNaovITUNfgU2fPnALCEDL'
 
-   \# Get details of job ny ID:
-   openai.fine_tuning.jobs.retrieve(job_id)
+```
+# Get details of job ny ID:
+openai.fine_tuning.jobs.retrieve(job_id)
 
-   \# See current job events (latest 10 events):
-   openai.fine_tuning.jobs.list_events(fine_tuning_job_id=job_id, limit=10).data
+# See current job events (latest 10 events):
+openai.fine_tuning.jobs.list_events(fine_tuning_job_id=job_id, limit=10).data
+```
 
-   Start of job events:
+Start of job events:
 
-   > [FineTuningJobEvent(id='ftevent-qMjnvvRqSr0yRbcQngQTSJor', created_at=1745810086, level='info', message='Validating training file: file-ANZ1fXNvT9rpFa5HptJ8fp and validation file: file-MGCRJXFiCjosPToMF5ywab', object='fine_tuning.job.event', data={}, type='message'),
-   >
-   > > FineTuningJobEvent(id='ftevent-Qm93jkKFgINt9K1QhswVUU2U', created_at=1745810086, level='info', message='Created fine-tuning job: ftjob-PANNaovITUNfgU2fPnALCEDL', object='fine_tuning.job.event', data={}, type='message')]
+> [FineTuningJobEvent(id='ftevent-qMjnvvRqSr0yRbcQngQTSJor', created_at=1745810086, level='info', message='Validating training file: file-ANZ1fXNvT9rpFa5HptJ8fp and validation file: file-MGCRJXFiCjosPToMF5ywab', object='fine_tuning.job.event', data={}, type='message'),
+>
+> > FineTuningJobEvent(id='ftevent-Qm93jkKFgINt9K1QhswVUU2U', created_at=1745810086, level='info', message='Created fine-tuning job: ftjob-PANNaovITUNfgU2fPnALCEDL', object='fine_tuning.job.event', data={}, type='message')]
 
-   In progess job events:
+In progess job events:
 
-   > [FineTuningJobEvent(id='ftevent-r70gslmVFgjy6rnD8uYnQnio', created_at=1745810442, level='info', message='Step 60/200: training loss=0.73, validation loss=1.46', object='fine_tuning.job.event', data={'step': 60, 'train_loss': 0.7305774688720703, 'valid_loss': 1.4598660469055176, 'total_steps': 200, 'train_mean_token_accuracy': 0.875, 'valid_mean_token_accuracy': 0.75}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-cLCUQkaOor0OjN2jYOPvVaO1', created_at=1745810440, level='info', message='Step 59/200: training loss=1.40', object='fine_tuning.job.event', data={'step': 59, 'train_loss': 1.401196002960205, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-5J9XiTALuGdFxCpc3Ss60DZ9', created_at=1745810437, level='info', message='Step 58/200: training loss=0.70', object='fine_tuning.job.event', data={'step': 58, 'train_loss': 0.7029500007629395, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-F2F9c4hUPA7E5c4lRHJXpz1W', created_at=1745810437, level='info', message='Step 57/200: training loss=1.14', object='fine_tuning.job.event', data={'step': 57, 'train_loss': 1.1434681415557861, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-bek67WqxTyneLmi0gzasG2NC', created_at=1745810437, level='info', message='Step 56/200: training loss=0.87', object='fine_tuning.job.event', data={'step': 56, 'train_loss': 0.8705952167510986, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-qEghJUp6zY22RAUoGpl3x4Yc', created_at=1745810434, level='info', message='Step 55/200: training loss=0.90', object='fine_tuning.job.event', data={'step': 55, 'train_loss': 0.9008762836456299, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-i8seByn9xcNDgQlMbpOZRaaj', created_at=1745810434, level='info', message='Step 54/200: training loss=1.44', object='fine_tuning.job.event', data={'step': 54, 'train_loss': 1.4444801807403564, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-G9onFQFBU6gukn1AAsxfSAdA', created_at=1745810434, level='info', message='Step 53/200: training loss=1.28', object='fine_tuning.job.event', data={'step': 53, 'train_loss': 1.2828950881958008, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-998fysaBBM2kG2rIDdVx7bes', created_at=1745810431, level='info', message='Step 52/200: training loss=0.63', object='fine_tuning.job.event', data={'step': 52, 'train_loss': 0.6335906982421875, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
-   > FineTuningJobEvent(id='ftevent-medyvOgQsB7pNNMc1njFzB56', created_at=1745810431, level='info', message='Step 51/200: training loss=1.47', object='fine_tuning.job.event', data={'step': 51, 'train_loss': 1.4744696617126465, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics')
+> [FineTuningJobEvent(id='ftevent-r70gslmVFgjy6rnD8uYnQnio', created_at=1745810442, level='info', message='Step 60/200: training loss=0.73, validation loss=1.46', object='fine_tuning.job.event', data={'step': 60, 'train_loss': 0.7305774688720703, 'valid_loss': 1.4598660469055176, 'total_steps': 200, 'train_mean_token_accuracy': 0.875, 'valid_mean_token_accuracy': 0.75}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-cLCUQkaOor0OjN2jYOPvVaO1', created_at=1745810440, level='info', message='Step 59/200: training loss=1.40', object='fine_tuning.job.event', data={'step': 59, 'train_loss': 1.401196002960205, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-5J9XiTALuGdFxCpc3Ss60DZ9', created_at=1745810437, level='info', message='Step 58/200: training loss=0.70', object='fine_tuning.job.event', data={'step': 58, 'train_loss': 0.7029500007629395, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-F2F9c4hUPA7E5c4lRHJXpz1W', created_at=1745810437, level='info', message='Step 57/200: training loss=1.14', object='fine_tuning.job.event', data={'step': 57, 'train_loss': 1.1434681415557861, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-bek67WqxTyneLmi0gzasG2NC', created_at=1745810437, level='info', message='Step 56/200: training loss=0.87', object='fine_tuning.job.event', data={'step': 56, 'train_loss': 0.8705952167510986, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-qEghJUp6zY22RAUoGpl3x4Yc', created_at=1745810434, level='info', message='Step 55/200: training loss=0.90', object='fine_tuning.job.event', data={'step': 55, 'train_loss': 0.9008762836456299, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-i8seByn9xcNDgQlMbpOZRaaj', created_at=1745810434, level='info', message='Step 54/200: training loss=1.44', object='fine_tuning.job.event', data={'step': 54, 'train_loss': 1.4444801807403564, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-G9onFQFBU6gukn1AAsxfSAdA', created_at=1745810434, level='info', message='Step 53/200: training loss=1.28', object='fine_tuning.job.event', data={'step': 53, 'train_loss': 1.2828950881958008, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-998fysaBBM2kG2rIDdVx7bes', created_at=1745810431, level='info', message='Step 52/200: training loss=0.63', object='fine_tuning.job.event', data={'step': 52, 'train_loss': 0.6335906982421875, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
+> FineTuningJobEvent(id='ftevent-medyvOgQsB7pNNMc1njFzB56', created_at=1745810431, level='info', message='Step 51/200: training loss=1.47', object='fine_tuning.job.event', data={'step': 51, 'train_loss': 1.4744696617126465, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics')
 
-   Completed job events:
+Completed job events:
 
-   > [FineTuningJobEvent(id='ftevent-bqb3dmLTCQ2ZCVaVbtATMcPJ', created_at=1745810672, level='info', message='The job has successfully completed', object='fine_tuning.job.event', data={}, type='message'),
-   >
-   > > FineTuningJobEvent(id='ftevent-ARwZfcP8WhglSCqT6vK5soEu', created_at=1745810668, level='info', message='New fine-tuned model created', object='fine_tuning.job.event', data={}, type='message'),
-   > > FineTuningJobEvent(id='ftevent-RGffErhX5N3vxv4vkx9iGo6m', created_at=1745810630, level='info', message='Step 200/200: training loss=1.14, validation loss=1.13, full validation loss=1.12', object='fine_tuning.job.event', data={'step': 200, 'train_loss': 1.1376311779022217, 'valid_loss': 1.1295273303985596, 'total_steps': 200, 'full_valid_loss': 1.1193085956573485, 'train_mean_token_accuracy': 0.75, 'valid_mean_token_accuracy': 0.75, 'full_valid_mean_token_accuracy': 0.7925}, type='metrics'),
-   > > FineTuningJobEvent(id='ftevent-SEA5eFcvrlKYbGA2O8XXNUiJ', created_at=1745810621, level='info', message='Step 199/200: training loss=1.42', object='fine_tuning.job.event', data={'step': 199, 'train_loss': 1.4206628799438477, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
-   > > FineTuningJobEvent(id='ftevent-6gCQzSFkCtI0pwZ5zRz0TTCY', created_at=1745810619, level='info', message='Step 198/200: training loss=0.52', object='fine_tuning.job.event', data={'step': 198, 'train_loss': 0.5175371170043945, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
-   > > FineTuningJobEvent(id='ftevent-53YUlCNBAVkBWHjo6RGdmmIu', created_at=1745810619, level='info', message='Step 197/200: training loss=1.24', object='fine_tuning.job.event', data={'step': 197, 'train_loss': 1.2442662715911865, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
-   > > FineTuningJobEvent(id='ftevent-tEVFXrITeqCn1wiCiFCtdhlY', created_at=1745810619, level='info', message='Step 196/200: training loss=0.87', object='fine_tuning.job.event', data={'step': 196, 'train_loss': 0.8681986331939697, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
-   > > FineTuningJobEvent(id='ftevent-pCTwhQtmrviENqKHuOwPFHmO', created_at=1745810616, level='info', message='Step 195/200: training loss=1.25', object='fine_tuning.job.event', data={'step': 195, 'train_loss': 1.2511980533599854, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
-   > > FineTuningJobEvent(id='ftevent-VKcs3M6Zyw1UXyooc9ZV3BQe', created_at=1745810616, level='info', message='Step 194/200: training loss=0.99', object='fine_tuning.job.event', data={'step': 194, 'train_loss': 0.9867780208587646, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
-   > > FineTuningJobEvent(id='ftevent-Xe26DwmMS5OJizJDt9BrdebI', created_at=1745810616, level='info', message='Step 193/200: training loss=1.23', object='fine_tuning.job.event', data={'step': 193, 'train_loss': 1.2297937870025635, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics')]
+> [FineTuningJobEvent(id='ftevent-bqb3dmLTCQ2ZCVaVbtATMcPJ', created_at=1745810672, level='info', message='The job has successfully completed', object='fine_tuning.job.event', data={}, type='message'),
+>
+> > FineTuningJobEvent(id='ftevent-ARwZfcP8WhglSCqT6vK5soEu', created_at=1745810668, level='info', message='New fine-tuned model created', object='fine_tuning.job.event', data={}, type='message'),
+> > FineTuningJobEvent(id='ftevent-RGffErhX5N3vxv4vkx9iGo6m', created_at=1745810630, level='info', message='Step 200/200: training loss=1.14, validation loss=1.13, full validation loss=1.12', object='fine_tuning.job.event', data={'step': 200, 'train_loss': 1.1376311779022217, 'valid_loss': 1.1295273303985596, 'total_steps': 200, 'full_valid_loss': 1.1193085956573485, 'train_mean_token_accuracy': 0.75, 'valid_mean_token_accuracy': 0.75, 'full_valid_mean_token_accuracy': 0.7925}, type='metrics'),
+> > FineTuningJobEvent(id='ftevent-SEA5eFcvrlKYbGA2O8XXNUiJ', created_at=1745810621, level='info', message='Step 199/200: training loss=1.42', object='fine_tuning.job.event', data={'step': 199, 'train_loss': 1.4206628799438477, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
+> > FineTuningJobEvent(id='ftevent-6gCQzSFkCtI0pwZ5zRz0TTCY', created_at=1745810619, level='info', message='Step 198/200: training loss=0.52', object='fine_tuning.job.event', data={'step': 198, 'train_loss': 0.5175371170043945, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
+> > FineTuningJobEvent(id='ftevent-53YUlCNBAVkBWHjo6RGdmmIu', created_at=1745810619, level='info', message='Step 197/200: training loss=1.24', object='fine_tuning.job.event', data={'step': 197, 'train_loss': 1.2442662715911865, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
+> > FineTuningJobEvent(id='ftevent-tEVFXrITeqCn1wiCiFCtdhlY', created_at=1745810619, level='info', message='Step 196/200: training loss=0.87', object='fine_tuning.job.event', data={'step': 196, 'train_loss': 0.8681986331939697, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
+> > FineTuningJobEvent(id='ftevent-pCTwhQtmrviENqKHuOwPFHmO', created_at=1745810616, level='info', message='Step 195/200: training loss=1.25', object='fine_tuning.job.event', data={'step': 195, 'train_loss': 1.2511980533599854, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics'),
+> > FineTuningJobEvent(id='ftevent-VKcs3M6Zyw1UXyooc9ZV3BQe', created_at=1745810616, level='info', message='Step 194/200: training loss=0.99', object='fine_tuning.job.event', data={'step': 194, 'train_loss': 0.9867780208587646, 'total_steps': 200, 'train_mean_token_accuracy': 0.875}, type='metrics'),
+> > FineTuningJobEvent(id='ftevent-Xe26DwmMS5OJizJDt9BrdebI', created_at=1745810616, level='info', message='Step 193/200: training loss=1.23', object='fine_tuning.job.event', data={'step': 193, 'train_loss': 1.2297937870025635, 'total_steps': 200, 'train_mean_token_accuracy': 0.75}, type='metrics')]
 
 <img src="./images/Product-Pricer-Fine-Tuning-WandB-Job-Run.jpg" alt="OpenAI fine-tuning training job run monitored in Weigts and Bias" />
 
@@ -998,59 +1061,67 @@ Results:
 
 1. Get model name from job ID (or email from job complete notification):
 
-   fine_tuned_model_name = openai.fine_tuning.jobs.retrieve(job_id).fine_tuned_model
-   fine_tuned_model_name
+```
+fine_tuned_model_name = openai.fine_tuning.jobs.retrieve(job_id).fine_tuned_model
+fine_tuned_model_name
+```
 
-   > 'ft:gpt-4o-mini-2024-07-18:personal:pricer:BR9OWYkF'
+> 'ft:gpt-4o-mini-2024-07-18:personal:pricer:BR9OWYkF'
 
 2. Update function to create prompt without price:
 
-   def messages_for(item):
-   system_message = "You estimate prices of items. Reply only with the price, no explanation"
-   user_prompt = item.test_prompt().replace(" to the nearest dollar","").replace("\n\nPrice is $","")
-   return [
-   {"role": "system", "content": system_message},
-   {"role": "user", "content": user_prompt},
-   {"role": "assistant", "content": "Price is $"}
-   ]
+```
+def messages_for(item):
+    system_message = "You estimate prices of items. Reply only with the price, no explanation"
+    user_prompt = item.test_prompt().replace(" to the nearest dollar","").replace("\n\nPrice is $","")
+    return [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": user_prompt},
+        {"role": "assistant", "content": "Price is $"}
+    ]
 
-   messages_for(test[0])
+messages_for(test[0])
+```
 
-   > [{'role': 'system',
-   >
-   > > 'content': 'You estimate prices of items. Reply only with the price, no explanation'},
-   > > {'role': 'user',
-   > > 'content': "How much does this cost?\n\nOEM AC Compressor w/A/C Repair Kit For Ford F150 F-150 V8 & Lincoln Mark LT 2007 2008 - BuyAutoParts NEW\nAs one of the world's largest automotive parts suppliers, our parts are trusted every day by mechanics and vehicle owners worldwide. This A/C Compressor and Components Kit is manufactured and tested to the strictest OE standards for unparalleled performance. Built for trouble-free ownership and 100% visually inspected and quality tested, this A/C Compressor and Components Kit is backed by our 100% satisfaction guarantee. Guaranteed Exact Fit for easy installation 100% BRAND NEW, premium ISO/TS 16949 quality - tested to meet or exceed OEM specifications Engineered for superior durability, backed by industry-leading unlimited-mileage warranty Included in this K"},
-   > > {'role': 'assistant', 'content': 'Price is $'}]
+> [{'role': 'system',
+>
+> > 'content': 'You estimate prices of items. Reply only with the price, no explanation'},
+> > {'role': 'user',
+> > 'content': "How much does this cost?\n\nOEM AC Compressor w/A/C Repair Kit For Ford F150 F-150 V8 & Lincoln Mark LT 2007 2008 - BuyAutoParts NEW\nAs one of the world's largest automotive parts suppliers, our parts are trusted every day by mechanics and vehicle owners worldwide. This A/C Compressor and Components Kit is manufactured and tested to the strictest OE standards for unparalleled performance. Built for trouble-free ownership and 100% visually inspected and quality tested, this A/C Compressor and Components Kit is backed by our 100% satisfaction guarantee. Guaranteed Exact Fit for easy installation 100% BRAND NEW, premium ISO/TS 16949 quality - tested to meet or exceed OEM specifications Engineered for superior durability, backed by industry-leading unlimited-mileage warranty Included in this K"},
+> > {'role': 'assistant', 'content': 'Price is $'}]
 
 3. Create a utility function to extract the price from a string
 
-   def get_price(s):
-   s = s.replace('$','').replace(',','')
-   match = re.search(r"[-+]?\d\*\.\d+|\d+", s)
-   return float(match.group()) if match else 0
+```
+def get_price(s):
+    s = s.replace('$','').replace(',','')
+    match = re.search(r"[-+]?\d\*\.\d+|\d+", s)
+    return float(match.group()) if match else 0
+```
 
 4. Create he function for our fine tuned gpt-4o-mini model:
 
-   def gpt_fine_tuned(item):
-   response = openai.chat.completions.create(
-   model=fine_tuned_model_name,
-   messages=messages_for(item),
-   seed=42,
-   max_tokens=7
-   )
-   reply = response.choices[0].message.content
-   return get_price(reply)
+```
+def gpt_fine_tuned(item):
+    response = openai.chat.completions.create(
+        model=fine_tuned_model_name,
+        messages=messages_for(item),
+        seed=42,
+        max_tokens=7
+    )
+    reply = response.choices[0].message.content
+    return get_price(reply)
 
-   print(test[0].price)
+print(test[0].price)
+```
 
-   > 374.41
-   > print(gpt_fine_tuned(test[0]))
-   > 174.77
+> 374.41
+> print(gpt_fine_tuned(test[0]))
+> 174.77
 
 5. Test the model against all the test data:
 
-   Tester.test(gpt_fine_tuned, test)
+`Tester.test(gpt_fine_tuned, test)`
 
 #### Fine-tune model results: bad news!
 
@@ -1176,38 +1247,39 @@ Ok to ignore error on pip install:
 ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
 gcsfs 2025.3.2 requires fsspec==2025.3.2, but you have fsspec 2025.3.0 which is incompatible.
 
-Screenshot of resource usage loaging base model without quantization (takes 5-10 minutes):
+Screenshot of resource usage logging base model without quantization (takes 5-10 minutes):
 QLoRA-Load-Base-Model-Resource-Usage.jpg
 
 Memory footprint: 32.1
 
-base_model
+```
 LlamaForCausalLM(
-(model): LlamaModel(
-(embed_tokens): Embedding(128256, 4096)
-(layers): ModuleList(
-(0-31): 32 x LlamaDecoderLayer(
-(self_attn): LlamaAttention(
-(q_proj): Linear(in_features=4096, out_features=4096, bias=False)
-(k_proj): Linear(in_features=4096, out_features=1024, bias=False)
-(v_proj): Linear(in_features=4096, out_features=1024, bias=False)
-(o_proj): Linear(in_features=4096, out_features=4096, bias=False)
+  (model): LlamaModel(
+    (embed_tokens): Embedding(128256, 4096)
+    (layers): ModuleList(
+      (0-31): 32 x LlamaDecoderLayer(
+        (self_attn): LlamaAttention(
+          (q_proj): Linear(in_features=4096, out_features=4096, bias=False)
+          (k_proj): Linear(in_features=4096, out_features=1024, bias=False)
+          (v_proj): Linear(in_features=4096, out_features=1024, bias=False)
+          (o_proj): Linear(in_features=4096, out_features=4096, bias=False)
+        )
+        (mlp): LlamaMLP(
+          (gate_proj): Linear(in_features=4096, out_features=14336, bias=False)
+          (up_proj): Linear(in_features=4096, out_features=14336, bias=False)
+          (down_proj): Linear(in_features=14336, out_features=4096, bias=False)
+          (act_fn): SiLU()
+        )
+        (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
+        (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
+      )
+    )
+    (norm): LlamaRMSNorm((4096,), eps=1e-05)
+    (rotary_emb): LlamaRotaryEmbedding()
+  )
+  (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
 )
-(mlp): LlamaMLP(
-(gate_proj): Linear(in_features=4096, out_features=14336, bias=False)
-(up_proj): Linear(in_features=4096, out_features=14336, bias=False)
-(down_proj): Linear(in_features=14336, out_features=4096, bias=False)
-(act_fn): SiLU()
-)
-(input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-(post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-)
-)
-(norm): LlamaRMSNorm((4096,), eps=1e-05)
-(rotary_emb): LlamaRotaryEmbedding()
-)
-(lm_head): Linear(in_features=4096, out_features=128256, bias=False)
-)
+```
 
 What's made clear when looking at the architecture of the base model's neural network is that it consists of:
 
@@ -1227,33 +1299,34 @@ Load the Base Model using 8 bit
 
 Memory footprint: 9.1 GB
 
-base_model
+```
 LlamaForCausalLM(
-(model): LlamaModel(
-(embed_tokens): Embedding(128256, 4096)
-(layers): ModuleList(
-(0-31): 32 x LlamaDecoderLayer(
-(self_attn): LlamaAttention(
-(q_proj): Linear8bitLt(in_features=4096, out_features=4096, bias=False)
-(k_proj): Linear8bitLt(in_features=4096, out_features=1024, bias=False)
-(v_proj): Linear8bitLt(in_features=4096, out_features=1024, bias=False)
-(o_proj): Linear8bitLt(in_features=4096, out_features=4096, bias=False)
+  (model): LlamaModel(
+    (embed_tokens): Embedding(128256, 4096)
+    (layers): ModuleList(
+      (0-31): 32 x LlamaDecoderLayer(
+        (self_attn): LlamaAttention(
+          (q_proj): Linear8bitLt(in_features=4096, out_features=4096, bias=False)
+          (k_proj): Linear8bitLt(in_features=4096, out_features=1024, bias=False)
+          (v_proj): Linear8bitLt(in_features=4096, out_features=1024, bias=False)
+          (o_proj): Linear8bitLt(in_features=4096, out_features=4096, bias=False)
+        )
+        (mlp): LlamaMLP(
+          (gate_proj): Linear8bitLt(in_features=4096, out_features=14336, bias=False)
+          (up_proj): Linear8bitLt(in_features=4096, out_features=14336, bias=False)
+          (down_proj): Linear8bitLt(in_features=14336, out_features=4096, bias=False)
+          (act_fn): SiLU()
+        )
+        (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
+        (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
+      )
+    )
+    (norm): LlamaRMSNorm((4096,), eps=1e-05)
+    (rotary_emb): LlamaRotaryEmbedding()
+  )
+  (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
 )
-(mlp): LlamaMLP(
-(gate_proj): Linear8bitLt(in_features=4096, out_features=14336, bias=False)
-(up_proj): Linear8bitLt(in_features=4096, out_features=14336, bias=False)
-(down_proj): Linear8bitLt(in_features=14336, out_features=4096, bias=False)
-(act_fn): SiLU()
-)
-(input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-(post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-)
-)
-(norm): LlamaRMSNorm((4096,), eps=1e-05)
-(rotary_emb): LlamaRotaryEmbedding()
-)
-(lm_head): Linear(in_features=4096, out_features=128256, bias=False)
-)
+```
 
 Changes in architecture: none.
 
@@ -1266,131 +1339,136 @@ Load the Base Model using 4 bit with hyperparameters to experiment with:
 Memory footprint: 5.59 GB
 
 Neural network architecture of model is still the same:
+
+```
 LlamaForCausalLM(
-(model): LlamaModel(
-(embed_tokens): Embedding(128256, 4096)
-(layers): ModuleList(
-(0-31): 32 x LlamaDecoderLayer(
-(self_attn): LlamaAttention(
-(q_proj): Linear4bit(in_features=4096, out_features=4096, bias=False)
-(k_proj): Linear4bit(in_features=4096, out_features=1024, bias=False)
-(v_proj): Linear4bit(in_features=4096, out_features=1024, bias=False)
-(o_proj): Linear4bit(in_features=4096, out_features=4096, bias=False)
+  (model): LlamaModel(
+    (embed_tokens): Embedding(128256, 4096)
+    (layers): ModuleList(
+      (0-31): 32 x LlamaDecoderLayer(
+        (self_attn): LlamaAttention(
+          (q_proj): Linear4bit(in_features=4096, out_features=4096, bias=False)
+          (k_proj): Linear4bit(in_features=4096, out_features=1024, bias=False)
+          (v_proj): Linear4bit(in_features=4096, out_features=1024, bias=False)
+          (o_proj): Linear4bit(in_features=4096, out_features=4096, bias=False)
+        )
+        (mlp): LlamaMLP(
+          (gate_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
+          (up_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
+          (down_proj): Linear4bit(in_features=14336, out_features=4096, bias=False)
+          (act_fn): SiLU()
+        )
+        (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
+        (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
+      )
+    )
+    (norm): LlamaRMSNorm((4096,), eps=1e-05)
+    (rotary_emb): LlamaRotaryEmbedding()
+  )
+  (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
 )
-(mlp): LlamaMLP(
-(gate_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-(up_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-(down_proj): Linear4bit(in_features=14336, out_features=4096, bias=False)
-(act_fn): SiLU()
-)
-(input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-(post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-)
-)
-(norm): LlamaRMSNorm((4096,), eps=1e-05)
-(rotary_emb): LlamaRotaryEmbedding()
-)
-(lm_head): Linear(in_features=4096, out_features=128256, bias=False)
-)
+```
 
 Load in a fine-tuned model by loading in a PeftModel to see the architecture of it:
-fine_tuned_model = PeftModel.from_pretrained(base_model, FINETUNED_MODEL)
+`fine_tuned_model = PeftModel.from_pretrained(base_model, FINETUNED_MODEL)`
 
 _Change to mine when created_
 
 Constant to change:
-FINETUNED_MODEL = f"ed-donner/pricer-2024-09-13_13.04.39"
+FINETUNED_MODEL = f"clanredhead/pricer-2025-04-30_01.18.39"
 
 Memory footprint: 5.70 GB
 
 fine_tuned_model architecture:
 
-    PeftModelForCausalLM(
-      (base_model): LoraModel(
-        (model): LlamaForCausalLM(
-          (model): LlamaModel(
-            (embed_tokens): Embedding(128256, 4096)
-            (layers): ModuleList(
-              (0-31): 32 x LlamaDecoderLayer(
-                (self_attn): LlamaAttention(
-                  (q_proj): lora.Linear4bit(
-                    (base_layer): Linear4bit(in_features=4096, out_features=4096, bias=False)
-                    (lora_dropout): ModuleDict(
-                      (default): Dropout(p=0.1, inplace=False)
-                    )
-                    (lora_A): ModuleDict(
-                      (default): Linear(in_features=4096, out_features=32, bias=False)
-                    )
-                    (lora_B): ModuleDict(
-                      (default): Linear(in_features=32, out_features=4096, bias=False)
-                    )
-                    (lora_embedding_A): ParameterDict()
-                    (lora_embedding_B): ParameterDict()
-                    (lora_magnitude_vector): ModuleDict()
-                  )
-                  (k_proj): lora.Linear4bit(
-                    (base_layer): Linear4bit(in_features=4096, out_features=1024, bias=False)
-                    (lora_dropout): ModuleDict(
-                      (default): Dropout(p=0.1, inplace=False)
-                    )
-                    (lora_A): ModuleDict(
-                      (default): Linear(in_features=4096, out_features=32, bias=False)
-                    )
-                    (lora_B): ModuleDict(
-                      (default): Linear(in_features=32, out_features=1024, bias=False)
-                    )
-                    (lora_embedding_A): ParameterDict()
-                    (lora_embedding_B): ParameterDict()
-                    (lora_magnitude_vector): ModuleDict()
-                  )
-                  (v_proj): lora.Linear4bit(
-                    (base_layer): Linear4bit(in_features=4096, out_features=1024, bias=False)
-                    (lora_dropout): ModuleDict(
-                      (default): Dropout(p=0.1, inplace=False)
-                    )
-                    (lora_A): ModuleDict(
-                      (default): Linear(in_features=4096, out_features=32, bias=False)
-                    )
-                    (lora_B): ModuleDict(
-                      (default): Linear(in_features=32, out_features=1024, bias=False)
-                    )
-                    (lora_embedding_A): ParameterDict()
-                    (lora_embedding_B): ParameterDict()
-                    (lora_magnitude_vector): ModuleDict()
-                  )
-                  (o_proj): lora.Linear4bit(
-                    (base_layer): Linear4bit(in_features=4096, out_features=4096, bias=False)
-                    (lora_dropout): ModuleDict(
-                      (default): Dropout(p=0.1, inplace=False)
-                    )
-                    (lora_A): ModuleDict(
-                      (default): Linear(in_features=4096, out_features=32, bias=False)
-                    )
-                    (lora_B): ModuleDict(
-                      (default): Linear(in_features=32, out_features=4096, bias=False)
-                    )
-                    (lora_embedding_A): ParameterDict()
-                    (lora_embedding_B): ParameterDict()
-                    (lora_magnitude_vector): ModuleDict()
-                  )
+```
+PeftModelForCausalLM(
+  (base_model): LoraModel(
+    (model): LlamaForCausalLM(
+      (model): LlamaModel(
+        (embed_tokens): Embedding(128256, 4096)
+        (layers): ModuleList(
+          (0-31): 32 x LlamaDecoderLayer(
+            (self_attn): LlamaAttention(
+              (q_proj): lora.Linear4bit(
+                (base_layer): Linear4bit(in_features=4096, out_features=4096, bias=False)
+                (lora_dropout): ModuleDict(
+                  (default): Dropout(p=0.1, inplace=False)
                 )
-                (mlp): LlamaMLP(
-                  (gate_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-                  (up_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-                  (down_proj): Linear4bit(in_features=14336, out_features=4096, bias=False)
-                  (act_fn): SiLU()
+                (lora_A): ModuleDict(
+                  (default): Linear(in_features=4096, out_features=32, bias=False)
                 )
-                (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-                (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
+                (lora_B): ModuleDict(
+                  (default): Linear(in_features=32, out_features=4096, bias=False)
+                )
+                (lora_embedding_A): ParameterDict()
+                (lora_embedding_B): ParameterDict()
+                (lora_magnitude_vector): ModuleDict()
+              )
+              (k_proj): lora.Linear4bit(
+                (base_layer): Linear4bit(in_features=4096, out_features=1024, bias=False)
+                (lora_dropout): ModuleDict(
+                  (default): Dropout(p=0.1, inplace=False)
+                )
+                (lora_A): ModuleDict(
+                  (default): Linear(in_features=4096, out_features=32, bias=False)
+                )
+                (lora_B): ModuleDict(
+                  (default): Linear(in_features=32, out_features=1024, bias=False)
+                )
+                (lora_embedding_A): ParameterDict()
+                (lora_embedding_B): ParameterDict()
+                (lora_magnitude_vector): ModuleDict()
+              )
+              (v_proj): lora.Linear4bit(
+                (base_layer): Linear4bit(in_features=4096, out_features=1024, bias=False)
+                (lora_dropout): ModuleDict(
+                  (default): Dropout(p=0.1, inplace=False)
+                )
+                (lora_A): ModuleDict(
+                  (default): Linear(in_features=4096, out_features=32, bias=False)
+                )
+                (lora_B): ModuleDict(
+                  (default): Linear(in_features=32, out_features=1024, bias=False)
+                )
+                (lora_embedding_A): ParameterDict()
+                (lora_embedding_B): ParameterDict()
+                (lora_magnitude_vector): ModuleDict()
+              )
+              (o_proj): lora.Linear4bit(
+                (base_layer): Linear4bit(in_features=4096, out_features=4096, bias=False)
+                (lora_dropout): ModuleDict(
+                  (default): Dropout(p=0.1, inplace=False)
+                )
+                (lora_A): ModuleDict(
+                  (default): Linear(in_features=4096, out_features=32, bias=False)
+                )
+                (lora_B): ModuleDict(
+                  (default): Linear(in_features=32, out_features=4096, bias=False)
+                )
+                (lora_embedding_A): ParameterDict()
+                (lora_embedding_B): ParameterDict()
+                (lora_magnitude_vector): ModuleDict()
               )
             )
-            (norm): LlamaRMSNorm((4096,), eps=1e-05)
-            (rotary_emb): LlamaRotaryEmbedding()
+            (mlp): LlamaMLP(
+              (gate_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
+              (up_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
+              (down_proj): Linear4bit(in_features=14336, out_features=4096, bias=False)
+              (act_fn): SiLU()
+            )
+            (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
+            (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
           )
-          (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
         )
+        (norm): LlamaRMSNorm((4096,), eps=1e-05)
+        (rotary_emb): LlamaRotaryEmbedding()
       )
+      (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
     )
+  )
+)
+```
 
 Changes to architecture:
 
@@ -1478,74 +1556,75 @@ Numbers used to test tokenizer:
 
 Function used to get token:
 
-    tokens = tokenizer.encode(str(number), add_special_tokens=False)
+`tokens = tokenizer.encode(str(number), add_special_tokens=False)`
 
-add_special_tokens=False: do not add in things like a start and end of sentance token that will interfer with things. Just sinple convert this text into tokens that represents this test.
+`add_special_tokens=False`: do not add in things like a start and end of sentance token that will interfer with things. Just sinple convert this text into tokens that represents this test.
 
 Token investoigation results
 
-    investigate_tokenizer(LLAMA_3_1)
+`investigate_tokenizer(LLAMA_3_1)`
 
-The tokens for 0: [15]
-The tokens for 1: [16]
-The tokens for 10: [605]
-The tokens for 100: [1041]
-The tokens for 999: [5500]
-The tokens for 1000: [1041, 15]
+> The tokens for 0: [15]
+> The tokens for 1: [16]
+> The tokens for 10: [605]
+> The tokens for 100: [1041]
+> The tokens for 999: [5500]
+> The tokens for 1000: [1041, 15]
 
-    investigate_tokenizer(QWEN_2_5)
+`investigate_tokenizer(QWEN_2_5)`
 
-The tokens for 0: [15]
-The tokens for 1: [16]
-The tokens for 10: [16, 15]
-The tokens for 100: [16, 15, 15]
-The tokens for 999: [24, 24, 24]
-The tokens for 1000: [16, 15, 15, 15]
+> The tokens for 0: [15]
+> The tokens for 1: [16]
+> The tokens for 10: [16, 15]
+> The tokens for 100: [16, 15, 15]
+> The tokens for 999: [24, 24, 24]
+> The tokens for 1000: [16, 15, 15, 15]
 
-    investigate_tokenizer(GEMMA_2)
+`investigate_tokenizer(GEMMA_2)`
 
-The tokens for 0: [235276]
-The tokens for 1: [235274]
-The tokens for 10: [235274, 235276]
-The tokens for 100: [235274, 235276, 235276]
-The tokens for 999: [235315, 235315, 235315]
-The tokens for 1000: [235274, 235276, 235276, 235276]
+> The tokens for 0: [235276]
+> The tokens for 1: [235274]
+> The tokens for 10: [235274, 235276]
+> The tokens for 100: [235274, 235276, 235276]
+> The tokens for 999: [235315, 235315, 235315]
+> The tokens for 1000: [235274, 235276, 235276, 235276]
 
-    investigate_tokenizer(PHI_3)
+`investigate_tokenizer(PHI_3)`
 
-The tokens for 0: [29871, 29900]
-The tokens for 1: [29871, 29896]
-The tokens for 10: [29871, 29896, 29900]
-The tokens for 100: [29871, 29896, 29900, 29900]
-The tokens for 999: [29871, 29929, 29929, 29929]
-The tokens for 1000: [29871, 29896, 29900, 29900, 29900]
+> The tokens for 0: [29871, 29900]
+> The tokens for 1: [29871, 29896]
+> The tokens for 10: [29871, 29896, 29900]
+> The tokens for 100: [29871, 29896, 29900, 29900]
+> The tokens for 999: [29871, 29929, 29929, 29929]
+> The tokens for 1000: [29871, 29896, 29900, 29900, 29900]
 
 Note: there is a smaller variant of PHI_3 that has same properties for representing numbers as tokens as Lllama that might be worth testing.
 
 ##### Load Our Data
 
-MAX_SEQUENCE_LENGTH = 182
+`MAX_SEQUENCE_LENGTH = 182`
 
 This variable is used to limit the text to 179 tokens +3 tokens in case a start and end sentance token is used to ensure the price is not cut off.
 
 ##### Prepare our Base Llama Model for evaluation
 
-QUANT_4_BIT = True
+`QUANT_4_BIT = True`
 
 A setting to select the 4 bit quantization if set to true, or 8 bit if set to false.
 
 Load the Tokenizer and the Model:
-4 bit Memory footprint: 5.6 GB
-8 bit Memory footprint: 9.1 GB
+
+- 4 bit Memory footprint: 5.6 GB
+- 8 bit Memory footprint: 9.1 GB
 
 `model_predict(prompt)` is how we call our model in inference mode.
 
 - take the prompt and encode it
-- .to("cuba") pushes it off to the GPU
-- attention_mask line stops it from printing a warning but doesn't actually affect anything. It prevents it from trying to predict anythign that is happening in that input token area. We only want it to predict what's coming afterwards. It will do this anyway but gives warning if you don't explicit tell it to do that.
-- Use generate method on base model with max tokens of 4 (only really need 1 token but just in case it prints a dollar sign or something) and num_return_sequences=1 to tell it to only give back 1 answer
+- `.to("cuba")` pushes it off to the GPU
+- `attention_mask` line stops it from printing a warning but doesn't actually affect anything. It prevents it from trying to predict anythign that is happening in that input token area. We only want it to predict what's coming afterwards. It will do this anyway but gives warning if you don't explicit tell it to do that.
+- Use `generate` method on base model with max tokens of 4 (only really need 1 token but just in case it prints a dollar sign or something) and `num_return_sequences=1` to tell it to only give back 1 answer
 - Take that one answer and set it as the response using decode to turn it back into a string
-- Our exact_price function reurns just the price from the answer
+- Our `exact_price` function reurns just the price from the answer
 
 ##### Evaluation
 
@@ -1926,19 +2005,31 @@ Note: the number of similar products provided is a hyper-parameter that can be c
 
 **Result**: Significantly better results compared to all the Frontier models without RAG but not as good as fine-tuned open-source model.
 
-- GPT 4o Mini RAG Pricer Error=$55.57
-- RMSLE=0.46
-- Hits=66.8%
+- GPT 4o Mini RAG Pricer Error=$49.73
+- RMSLE=0.41
+- Hits=70.4%
 
 ##### DeepSeek Chat RAG
 
-<img src="./images/Product-Pricer-DeepSeek-Chat-RAG.jpg" alt="Distribution of Prices Predicted Using GPT 4o Mini with RAG" />
+<img src="./images/Product-Pricer-DeepSeek-Chat-RAG.jpg" alt="Distribution of Prices Predicted Using DeepSeek Chat with RAG" />
 
-**Result**: Significantly better results compared to all the Frontier models without RAG but not as good as fine-tuned open-source model.
+**Result**: Slightly better than the Frontier models without RAG but not as good as fine-tuned open-source model.
 
-- DeepSeek Chat RAG Pricer Error=$55.57
-- RMSLE=0.46
-- Hits=66.8%
+- DeepSeek Chat RAG Pricer Error=$75.80
+- RMSLE=2.01
+- Hits=64.4%
+
+#### Random Forest Model
+
+Trained using the vectors 400k products in Chroma, from the SentenceTransformer model.
+
+<img src="./images/Product-Pricer-Random-Forest-Vectorstore.jpg" alt="Distribution of Prices Predicted Using Random Forest from Data in Vectorestore" />
+
+**Result**: Did worse than Random Forest using a smaller sample set but still better than the other traditional ML techniques.
+
+- Random Forest Pricer Error=$101.58
+- RMSLE=0.93
+- Hits=30.8%
 
 #### Ensemble Model
 
@@ -1948,6 +2039,7 @@ In a panda dataframe put these 3 model predictitions along with the minimum and 
 
 **Coefficients:**
 
+First attmept:
 - Specialist: 0.35
 - Frontier RAG: 0.08
 - Random Forest: -0.59
@@ -1955,6 +2047,29 @@ In a panda dataframe put these 3 model predictitions along with the minimum and 
 - Max: 0.52
 
 Intercept=35.78
+
+**Result**: Disappointedly this is slightly worse than fine-tuned open-source model for this dataset.
+
+- Ensemble 1 Pricer Error=$54.43
+- RMSLE=0.55
+- Hits=65.6%
+
+Second attempt
+- Specialist: 0.64
+- Frontier RAG: 0.27
+- Random Forest: -0.14
+- Min: 0.10
+- Max: 0.09
+
+Intercept=25.23
+
+<img src="./images/Product-Pricer-Ensemble-Model.jpg" alt="Distribution of Prices Predicted Using Ensemble Model" />
+
+**Result**: A little improvement but still slightly worse than fine-tuned open-source model for this dataset.
+
+- Ensemble 2 Pricer Error=$51.33
+- RMSLE=0.50
+- Hits=66.64%
 
 Note: for a better assessment on how it weighs the 3 models remove the min and max since the Random Forest is baked into those.
 
@@ -1965,19 +2080,13 @@ This model works by using the 3 Agents (Specialist, Frontier and Random Forest) 
 3. Predict the price by passing in X to the Ensemble Model for Y
 4. Return Y for the predicted price using the Linear Regression model
 
-<img src="./images/Product-Pricer-Ensemble-Model.jpg" alt="Distribution of Prices Predicted Using Ensemble Model" />
+Note: more work to be done if turning this into a commercial product. Maybe the intercept number was too high? Above is another attempt using a new Random Forest model that provides a lower intercept and different cooefficients.
 
-**Result**: Disappointedly this is slightly worse than fine-tuned open-source model for this dataset.
+#### Deals Scrapper
 
-- Ensemble Pricer Error=$54.43
-- RMSLE=0.55
-- Hits=65.6%
+The Deals Module looks for promising deals by subscribing to RSS feeds.
 
-Note: more work to be done if turning this into a commercial product. Maybe the intercept number was too high?
-
-#### Deals Scraper
-
-The Deals Module looks for promising deals by subscribing to RSS feeds using a python module that:
+Using a python module that:
 
 - Defines a series of RSS feeds that return deals for categories that closely match products our models have been trained for
 - The `extract` function cleans-up HTML and extracts usful text
@@ -2032,13 +2141,74 @@ The Scanner Agent using the Deals Scraper to `fetch_deals` by calling `ScrapeDea
 
 #### Messaging Agent
 
-Used to send push notifications using [Pushover](https://pushover.net/, which is free for up to 10K messages.
+Used to send txt messages and push notifications when a great deal is found. For push notifications [Pushover](https://pushover.net/) is used, which is free for up to 10K messages. For sending text messages [Twilo](https://www.twilio.com/) is used, which is $0.0079 per SMS or $0.02 for MMS.
+
+Configuration:
+
+- `DO_TEXT`: send txt messages
+- `DO_PUSH`: send push notifications
 
 #### Planning Agent
 
 Used to coordinate activities.
 
+Configuration:
+
+- `DEAL_THRESHOLD`: set to dollar amount of difference between product price and deal to trigger sending a notification
+
+Using simple python code that:
+
+- Creates instances of the 3 Agents: scanner, ensemble, and messenger
+- The `run` method takes a deal and turns it into an opportunity
+
 #### Agent Framework
+
+This will handle the database connectivity to chroma RAG db, persistent memory, logging, and ability for UI to integrate with it.
+
+**agent.py**
+The `Agent` superclass, that all the other agents inherit from, provides a `log` method that includes the name of the agent and a unique log message color for each agent.
+
+**memory.json**
+The `memory.json` file contains a list of JSON blobs representing the opportunity objects that inlcudes a deal, estimate, and discount.
+
+**deal_agent_framework.py**
+
+The Agent Framework `init_logging` function sets up logging that ensure when INFO level logs are created they are written out to `stdout` with a specific structure.
+
+The `DealAgentFramework` class has the database name and memory filename properties and when it starts up it:
+
+- Starts logging by calling `init_logging()`
+- Creates log messages
+- Loads the enviornment variables
+- Accesses the database
+- Reads the `memory.json` file into memory
+- Initializes the Planning Agent with the product collection from the database
+
+Methods:
+
+- The `read_memory` method loads in the opportunities from the `memory.json` file
+- The ``write_memory` method saves opportunities to the `memory.json` file
+- The `log` method writes messages to the log with the framework's name
+- The `run` method kicks off the Planning Agent and when it gets a new result it adds it to memory
+
+The following lines ensure that if it is being run from the commandline then it creates a new instance of the `DealAgentFramework` class and call the `run` method.
+
+```
+if __name__=="__main__":
+    DealAgentFramework().run()
+```
+
+**Push Notification**
+
+<img src="./images/Product_Pricer_Push_Notification.png" alt="Example push notification from the Product Pricing agent" />
+
+#### UI
+
+Features:
+- Agent framework runs in the background and loads new deals when found
+- Clicking on the deal sends a push notification
+
+<img src="./images/Product_Pricer_Gradio_UI.jpg" alt="UI for the Product Pricing agent" />
 
 ## Productionize
 
@@ -2054,30 +2224,33 @@ Deployment steps:
 
 1. Push our fine-tuned model to Hugging Face:
 
-   fine_tuning.model.push_to_hub(PROJECT_RUN_NAME, private=True)
+`fine_tuning.model.push_to_hub(PROJECT_RUN_NAME, private=True)`
 
 2. Deploy a service to modal for calling fine-tuned model:
 
-   modal deploy -m pricer_service
+`modal deploy -m pricer_service`
 
 3. Deploy specialist agent:
 
 LLMOps:
 
+- Log message color: <span style="color:red">RED</span>
 - [pricer-server on Modal](https://modal.com/apps/jstoops/main/deployed/pricer-service)
 
 Usage:
 
-    from agents.specialist_agent import SpecialistAgent
+```
+from agents.specialist_agent import SpecialistAgent
 
-    agent = SpecialistAgent()
-    agent.price("iPad Pro 2nd generation")
+agent = SpecialistAgent()
+agent.price("iPad Pro 2nd generation")
+```
 
 ### Deploy Froniter Agent for RAG Pricer
 
 Source code and data:
 
-- [Products Vectorstore](https://github.com/jstoops/products_vectorstore/chroma.sqlite3)
+- [Product Vector Databasel](https://huggingface.co/clanredhead/pricer-2025-04-30_01.18.39/blob/main/models/products_vectorstore)
 - [Frontier Agent](https://github.com/jstoops/product-pricing-agent/agents/frontier_agent.py)
 
 Deployment steps:
@@ -2086,27 +2259,58 @@ Deployment steps:
 
 DataOps:
 
+- Log message color: <span style="color:blue">BLUE</span>
+
+**2D Visualization of Pricer Vectorstore**
+
 <img src="./images/pricer-vectorstore-2d-visualization-400k.jpg" alt="2D Visualization of Pricer Vectorstore all 400,000 items" />
-2D Visualization of Pricer Vectorstore
+<img src="./images/pricer-vectorstore-2d-visualization-10k.jpg" alt="2D Visualization of Pricer Vectorstore all 10,000 items" />
+
+Usage:
+
+```
+import chromadb
+from agents.frontier_agent import FrontierAgent
+
+DB = "products_vectorstore"
+client = chromadb.PersistentClient(path=DB)
+collection = client.get_or_create_collection('products')
+
+agent = FrontierAgent(collection)
+agent.price("iPad Pro 2nd generation")
+```
 
 ### Deploy Random Forest Agent
 
 Source code and data:
 
-- [Random Forest Model](https://github.com/jstoops/product-pricing-agent/data/random_forest_model.pkl)
+- [Random Forest Model](https://huggingface.co/clanredhead/pricer-2025-04-30_01.18.39/blob/main/models/random_forest_model.pkl)
 - [Random Forest Agent](https://github.com/jstoops/product-pricing-agent/agents/random_forest_agent.py)
 
 Deployment steps:
 
 1.
 
-DataOps:
+MLOps:
+
+- Log message color: <span style="color:magenta">MAGENTA</span>
+
+Usage:
+
+```
+from agents.random_forest_agent import RandomForestAgent
+
+rf_model = joblib.load('random_forest_model.pkl')
+random_forest = RandomForestAgent()
+random_forest.price("iPad Pro 2nd generation")
+```
 
 ### Deploy Ensemble Agent
 
 Source code and data:
 
-- [Ensemble Model](https://github.com/jstoops/product-pricing-agent/data/ensemble_model.pkl)
+- [Ensemble Model](https://huggingface.co/clanredhead/pricer-2025-04-30_01.18.39/blob/main/models/ensemble_model.pkl)
+- [Product Vector Databasel](https://huggingface.co/clanredhead/pricer-2025-04-30_01.18.39/blob/main/models/products_vectorstore)
 - [Ensemble Agent](https://github.com/jstoops/product-pricing-agent/agents/ensemble_agent.py)
 
 Deployment steps:
@@ -2114,6 +2318,22 @@ Deployment steps:
 1.
 
 DataOps:
+
+- Log message color: <span style="color:yellow">YELLOW</span>
+
+Usage:
+
+```
+import chromadb
+from agents.ensemble_agent import EnsembleAgent
+
+DB = "products_vectorstore"
+client = chromadb.PersistentClient(path=DB)
+collection = client.get_or_create_collection('products')
+
+ensemble = EnsembleAgent(collection)
+ensemble.price("iPad Pro 2nd generation")
+```
 
 ### Deploy Deals Module
 
@@ -2137,8 +2357,28 @@ Feed URLs
 
 Usage:
 
-    scraped = ScrapedDeal.fetch()
-    result = [scrape for scrape in scraped if scrape.url not in urls]
+Get deals
+```
+from agents.deals import ScrapedDeal
+scraped = ScrapedDeal.fetch()
+result = [scrape for scrape in scraped if scrape.url not in urls]
+```
+
+Use structured output
+```
+from agents.deals import DealSelection
+def get_recommendations():
+    completion = openai.beta.chat.completions.parse(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+      ],
+        response_format=DealSelection
+    )
+    result = completion.choices[0].message.parsed
+    return result
+```
 
 ### Deploy Scanner Agent
 
@@ -2152,16 +2392,22 @@ Deployment steps:
 
 DataOps:
 
+- Log message color: <span style="color:cyan">CYAN</span>
+
 Usage:
 
-    agent = ScannerAgent()
-    result = agent.scan()
+```
+from agents.scanner_agent import ScannerAgent
+
+agent = ScannerAgent()
+result = agent.scan()
+```
 
 ### Deploy Messaging Agent
 
 Source code and data:
 
-- [? Agent](https://github.com/jstoops/product-pricing-agent/agents/messaging_agent.py)
+- [Messaging Agent](https://github.com/jstoops/product-pricing-agent/agents/messaging_agent.py)
 
 Deployment steps:
 
@@ -2169,16 +2415,23 @@ Deployment steps:
 
 DataOps:
 
+- Log message color: <span style="color:white">WHITE</span>
+- [Usage Monitoring for pricer_deal app](https://pushover.net/apps/wkvvq7-pricer_deal)
+
 Usage:
 
-    agent = ScannerAgent()
-    result = agent.scan()
+```
+from agents.messaging_agent import MessagingAgent
 
-### Deploy ? Agent
+agent = MessagingAgent()
+agent.push("You have a deal!")
+```
+
+### Deploy Planning Agent
 
 Source code and data:
 
-- [? Agent](https://github.com/jstoops/product-pricing-agent/agents/?_agent.py)
+- [Planning Agent](https://github.com/jstoops/product-pricing-agent/agents/planning_agent.py)
 
 Deployment steps:
 
@@ -2186,7 +2439,72 @@ Deployment steps:
 
 DataOps:
 
+- Log message color: <span style="color:green">GREEN</span>
+
 Usage:
+
+```
+import chromadb
+from agents.planning_agent import PlanningAgent
+
+DB = "products_vectorstore"
+client = chromadb.PersistentClient(path=DB)
+collection = client.get_or_create_collection('products')
+planner = PlanningAgent(collection)
+planner.plan()
+```
+
+
+### Deploy Deal Agent Framework
+
+Source code and data:
+
+- [Deal Agent Framework](https://github.com/jstoops/product-pricing-agent/frameworks/deal_agent_framework.py)
+- [Memory File](https://github.com/jstoops/product-pricing-agent/frameworks/memory.json)
+
+Deployment steps:
+
+1.
+
+DataOps:
+
+- Example [logs from first run](https://github.com/jstoops/product-pricing-agent/logs/first-run.txt)
+
+Usage:
+
+Pre-requisites:
+
+- `conda activate [env-name]`
+
+Run from the commandline:
+`python deal_agent_framwork.py`
+
+### Deploy Gradio UI
+
+Source code and data:
+
+- [Product Pricer UI](https://github.com/jstoops/product-pricing-agent/ui/product_pricer.py)
+- [Product Pricer Ops UI](https://github.com/jstoops/product-pricing-agent/ui/product_pricer_ops.py)
+
+Deployment steps:
+
+1.
+
+AppOps:
+
+<img src="./images/Product_Pricer_Gradio_UI_Logging_3D_Vectorstore.jpg" alt="UI for the Product Pricing agent with logging and interactive 3D visualization of pricign data" />
+
+Usage:
+
+Pre-requisites:
+
+- `conda activate [env-name]`
+
+Run from the commandline:
+`python product_pricer.py`
+
+Or with powerful GPU with a lot of memory:
+`python product_pricer_ops.py`
 
 # Troubleshooting
 
@@ -2246,3 +2564,25 @@ Using deprecated code
 
 REF: https://modal.com/docs/guide/modal-1-0-migration
 TBD - adding `.add_local_python_source("generate")` did not work!
+
+## Frontier Agent Always Uses DeepSeek
+
+INFO:root:[Frontier Agent] Initializing Frontier Agent
+INFO:root:[Frontier Agent] Frontier Agent is setting up with DeepSeek
+
+### Cause
+
+Set to use if key set
+
+### Solution
+
+Workaround: comment out this code in frontier_agent.py, restart kernal then create FrontierAgent:
+
+    deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+    if deepseek_api_key:
+        self.client = OpenAI(api_key=deepseek_api_key, base_url="https://api.deepseek.com")
+        self.MODEL = "deepseek-chat"
+        self.log("Frontier Agent is set up with DeepSeek")
+    else:
+
+Need to refactor code so uses config variable to set model to use.
