@@ -1176,29 +1176,29 @@ Using [Llama 3.1](https://ollama.com/library/llama3.1) with 8B weights - for too
 
 First of all you freeze all these weights, initially you don't optimize these 8 billion weights (in the case of Llama 3.1 8b) because it is too many knobs to turn, too many gradients.
 
-<img src="./Images/LoRA-Step-1-Freeze-Weights.jpg" alt="LoRA Step 1: Freeze the weights" />
+<img src="./images/LoRA-Step-1-Freeze-Weights.jpg" alt="LoRA Step 1: Freeze the weights" />
 
 ###### Step 2: Select some layers to target, called "Target Modules"
 
 Instead, we pick a few of the layers that we think are the key things that we'd want to train. These layers, these modules, in this stacked layered architecture are known as the _Target Models_. The target modules are the layers of the neural netwrok that you will be focusing on for the purposes of training.
 
-<img src="./Images/LoRA-Step-2-Select-Target-Modules.jpg" alt="LoRA Step 1: Freeze the weights" />
+<img src="./images/LoRA-Step-2-Select-Target-Modules.jpg" alt="LoRA Step 1: Freeze the weights" />
 
 ###### Step 3: Create new "Adaptor" matrices with lower dimensions, fewer parameters
 
 The weights are frozen and instead you create new matrices called _Adaptor Matrices_ with fewer dimensions. So not as many dimensions as are in the real model, fewer dimensionality aka _Lower Rank_, that will be off to one side.
 
-<img src="./Images/LoRA-Step-3-Create-Low-Rank-Adaptors.jpg" alt="LoRA Step 2: Select some layers to target" />
+<img src="./images/LoRA-Step-3-Create-Low-Rank-Adaptors.jpg" alt="LoRA Step 2: Select some layers to target" />
 
 ###### Step 4: Apply these adaptors to the Target Modules to adjust them - these get trained
 
 You will have the technique for applying these matrices into the target modules so that they will adapt the target modules. There will be a formular that means in the future whatever values are in the _Low Rant Adaptors_ will slightly shift, will slightly change what goes on in the target modules, they adapt them. So it's lower weights, fewer dimentions, that will be applied against these target modules.
 
-<img src="./Images/LoRA-Step-4-Apply-Adaptors-to-Target-Modules.jpg" alt="LoRA Step 4: Apply these adaptors to the Target Modules" />
+<img src="./images/LoRA-Step-4-Apply-Adaptors-to-Target-Modules.jpg" alt="LoRA Step 4: Apply these adaptors to the Target Modules" />
 
 To be more precise: there are in fact 2 LoRA matrices that get applied.
 
-<img src="./Images/LoRA-Step-4-Apply-2-LoRA-Matrices.jpg" alt="LoRA Step 4: Apply 2 LoRA matrices to the Target Modules" />
+<img src="./images/LoRA-Step-4-Apply-2-LoRA-Matrices.jpg" alt="LoRA Step 4: Apply 2 LoRA matrices to the Target Modules" />
 
 ##### Quantization
 
@@ -2522,8 +2522,8 @@ Then running the following failed:
     from hello import app, hello, hello_europe
 
     with app.run():
-    reply=hello.local()
-    reply
+      reply=hello.local()
+      reply
 
 ### Cause
 
