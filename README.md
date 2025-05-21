@@ -89,6 +89,8 @@ Dependencies:
 
 Begin scrubbing and curating the dataset by focusing on a subset of the data: Home Appliances.
 
+See [Data Curation Part 1](https://github.com/jstoops/product-pricing-agent/blob/main/data-curation/part1.ipynb) for details.
+
 ##### Investigate Chosen Dataset to Verify Suitability
 
 Steps:
@@ -304,6 +306,8 @@ Combine the Appliances dataset investigated with many other types of product lik
 Extend our dataset to a greater coverage, and craft it into an excellent dataset for training.
 
 Data curation can seem less exciting than other things we work on, but it's a crucial part of the LLM engineers' responsibility and an important craft to hone, so that you can build your own commercial solutions with high quality datasets.
+
+See [Data Curation Part 2](https://github.com/jstoops/product-pricing-agent/blob/main/data-curation/part2.ipynb) for details.
 
 ##### Load Datasets
 
@@ -676,6 +680,8 @@ Quickly set up these solutions to give us a starting point:
 - Word2vec & [Random Forest](https://en.wikipedia.org/wiki/Random_forest)
 - Word2vec & [SVR](https://www.geeksforgeeks.org/support-vector-regression-svr-using-linear-and-non-linear-kernels-in-scikit-learn/)
 
+See [Traditional ML Baseline Models](https://github.com/jstoops/product-pricing-agent/blob/main/baseline-models/traditional-ml.ipynb) for details.
+
 ##### Feature engineering & Linear Regression
 
 When we understand the data and say what do we think are going to be important factors that are likely to affect the price. Come up with these "features" like how they rank in Amazon's best seller rank and then see if some linear combination of these features does a good job of predicting the price or not.
@@ -752,9 +758,13 @@ Have a human read the 250 product descriptions and guessing the cost.
 - RMSLE=1.00
 - Hits=32.0%
 
+See Frontier Models vs Human Baseline Model [Setup](https://github.com/jstoops/product-pricing-agent/blob/main/baseline-models/frontier-vs-human-setup.ipynb) and [Test Results](https://github.com/jstoops/product-pricing-agent/blob/main/baseline-models/frontier-vs-human-test-results.ipynb) for details.
+
 ### Frontier Model Baselines
 
 **Important note**: we aren't _Training_ the frontier models. We're only providing them with the Test dataset to see how they perform. They don't gain the benefit of the 400,000 training examples that we provided to the Traditional ML models.
+
+See Frontier Models vs Human Baseline Model [Setup](https://github.com/jstoops/product-pricing-agent/blob/main/baseline-models/frontier-vs-human-setup.ipynb) and [Test Results](https://github.com/jstoops/product-pricing-agent/blob/main/baseline-models/frontier-vs-human-test-results.ipynb) for details.
 
 It's entirely possible that in their monstrously large training data, they've already been exposed to all the products in the training AND the test set. So there could be test "contamination" here which gives them an unfair advantage. We should keep that in mind.
 
@@ -854,6 +864,8 @@ Note: still lots of errors and very few exact guesses so safe from test "contami
 1. Create training dataset in jsonl format and upload to OpenAI
 2. Run training - training loss and validation loss should decrease
 3. Evaluate results, tweak and repeat
+
+See GPT 4o Mini [Fine-Tuning](https://github.com/jstoops/product-pricing-agent/blob/main/training/gpt-fine-tuning.ipynb) and [Evaluation](https://github.com/jstoops/product-pricing-agent/blob/main/training/gpt-fine-tuning-evaluation.ipynb) for details.
 
 #### Step 1: Preparing the Data
 
@@ -1134,6 +1146,7 @@ print(test[0].price)
 - Hits=41.6%
 
 Compared to basline models
+
 <img src="./images/Product-Pricer-FIne-Tuned-Baseline-Traditional-ML-Models-Results.jpg" alt="Average Absolute Prediction Error Baseline Models vs FIne Tuned Frontier Model" />
 
 Key objectives of fine-tuning for Fronier models
@@ -1152,6 +1165,7 @@ A problem like ours doesn't benefit significantly from Fine Tuning
 ### Fine-Tuning Open-Source Models
 
 Compared to basline and Frontier models
+
 <img src="./images/Product-Pricer-Model-Evaluation-Final-Results.jpg" alt="Average Absolute Prediction Error Baseline Models vs Best Frontier Model vs Fine Tuned Open-Source Model" />
 
 #### LoRA
@@ -1239,273 +1253,7 @@ In reality this is just trial and error, a bit of guess work and experimentation
    - Which of the layers of the neural network are adapted
    - **Rule of thumb**: Target the attention head layers
 
-##### CoLab Notes to be added
-
-Day 1
-
-Ok to ignore error on pip install:
-ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
-gcsfs 2025.3.2 requires fsspec==2025.3.2, but you have fsspec 2025.3.0 which is incompatible.
-
-Screenshot of resource usage logging base model without quantization (takes 5-10 minutes):
-QLoRA-Load-Base-Model-Resource-Usage.jpg
-
-Memory footprint: 32.1
-
-```
-LlamaForCausalLM(
-  (model): LlamaModel(
-    (embed_tokens): Embedding(128256, 4096)
-    (layers): ModuleList(
-      (0-31): 32 x LlamaDecoderLayer(
-        (self_attn): LlamaAttention(
-          (q_proj): Linear(in_features=4096, out_features=4096, bias=False)
-          (k_proj): Linear(in_features=4096, out_features=1024, bias=False)
-          (v_proj): Linear(in_features=4096, out_features=1024, bias=False)
-          (o_proj): Linear(in_features=4096, out_features=4096, bias=False)
-        )
-        (mlp): LlamaMLP(
-          (gate_proj): Linear(in_features=4096, out_features=14336, bias=False)
-          (up_proj): Linear(in_features=4096, out_features=14336, bias=False)
-          (down_proj): Linear(in_features=14336, out_features=4096, bias=False)
-          (act_fn): SiLU()
-        )
-        (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-        (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-      )
-    )
-    (norm): LlamaRMSNorm((4096,), eps=1e-05)
-    (rotary_emb): LlamaRotaryEmbedding()
-  )
-  (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
-)
-```
-
-What's made clear when looking at the architecture of the base model's neural network is that it consists of:
-
-- An embedding layer: the thing that takes text and turns it into, embeds it, into vectors in the neural network. `Embeddings (a, b)` where `a` is the dimensionality of how many possible tokens we have and `b` is the number of number of embedded vectors
-- There are 32 layers called 'LlamaDecoderLayers' and each of the layers look like whats printed in the model above from `(self-attn): Linear` to the 2nd `(rotary_emb): LlamaRotaryEmbedding()`
-  - The set of attention layers, which are called q_proj, k_proj, v_proj and o_proj, with different dimentionality:
-    - Some of these layers have 4,096 dimensions in and out
-    - Some of these layers have 4,096 dimensions in and 1,024 dimensions out
-  - The multi-layer perceptron (MLP) set of layers
-    - The up explodes out the number of dimensions
-    - The down reduces down the number of dimensions
-    - Followed by an activation function, SiLU is used by Llama
-  - LayerNorm layers
-- At the very end if the Linear Layer, the LM head, and this is somtimes targeted in cases where you want to generate something results that would take a different format, like a particular structure of JSON or to speak a different language
-
-Load the Base Model using 8 bit
-
-Memory footprint: 9.1 GB
-
-```
-LlamaForCausalLM(
-  (model): LlamaModel(
-    (embed_tokens): Embedding(128256, 4096)
-    (layers): ModuleList(
-      (0-31): 32 x LlamaDecoderLayer(
-        (self_attn): LlamaAttention(
-          (q_proj): Linear8bitLt(in_features=4096, out_features=4096, bias=False)
-          (k_proj): Linear8bitLt(in_features=4096, out_features=1024, bias=False)
-          (v_proj): Linear8bitLt(in_features=4096, out_features=1024, bias=False)
-          (o_proj): Linear8bitLt(in_features=4096, out_features=4096, bias=False)
-        )
-        (mlp): LlamaMLP(
-          (gate_proj): Linear8bitLt(in_features=4096, out_features=14336, bias=False)
-          (up_proj): Linear8bitLt(in_features=4096, out_features=14336, bias=False)
-          (down_proj): Linear8bitLt(in_features=14336, out_features=4096, bias=False)
-          (act_fn): SiLU()
-        )
-        (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-        (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-      )
-    )
-    (norm): LlamaRMSNorm((4096,), eps=1e-05)
-    (rotary_emb): LlamaRotaryEmbedding()
-  )
-  (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
-)
-```
-
-Changes in architecture: none.
-
-Load the Base Model using 4 bit with hyperparameters to experiment with:
-
-- Use double quant: does a pass through quantizing all of the weights and then does a 2nd pass through again and in doing so it is able to reduce memory by 10-20% or more. This makes a very small difference to the neural network so worth doing and recommended.
-- Using bfloat16 is seen as somthing that improves the speed of training, makes it faster with only a tiny sacrifice to quality. Haven't detected any change to the rate of optimization so recommended
-- nf4: when we reduce the precision down to a 4 bit number how should we interpret that 4 bit number? Common approach is to map it to a floating point number and nf4 approach maps it to something that has a normal distribution to it. Tried others and didn't work as well so recommended
-
-Memory footprint: 5.59 GB
-
-Neural network architecture of model is still the same:
-
-```
-LlamaForCausalLM(
-  (model): LlamaModel(
-    (embed_tokens): Embedding(128256, 4096)
-    (layers): ModuleList(
-      (0-31): 32 x LlamaDecoderLayer(
-        (self_attn): LlamaAttention(
-          (q_proj): Linear4bit(in_features=4096, out_features=4096, bias=False)
-          (k_proj): Linear4bit(in_features=4096, out_features=1024, bias=False)
-          (v_proj): Linear4bit(in_features=4096, out_features=1024, bias=False)
-          (o_proj): Linear4bit(in_features=4096, out_features=4096, bias=False)
-        )
-        (mlp): LlamaMLP(
-          (gate_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-          (up_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-          (down_proj): Linear4bit(in_features=14336, out_features=4096, bias=False)
-          (act_fn): SiLU()
-        )
-        (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-        (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-      )
-    )
-    (norm): LlamaRMSNorm((4096,), eps=1e-05)
-    (rotary_emb): LlamaRotaryEmbedding()
-  )
-  (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
-)
-```
-
-Load in a fine-tuned model by loading in a PeftModel to see the architecture of it:
-`fine_tuned_model = PeftModel.from_pretrained(base_model, FINETUNED_MODEL)`
-
-_Change to mine when created_
-
-Constant to change:
-FINETUNED_MODEL = f"clanredhead/pricer-2025-04-30_01.18.39"
-
-Memory footprint: 5.70 GB
-
-fine_tuned_model architecture:
-
-```
-PeftModelForCausalLM(
-  (base_model): LoraModel(
-    (model): LlamaForCausalLM(
-      (model): LlamaModel(
-        (embed_tokens): Embedding(128256, 4096)
-        (layers): ModuleList(
-          (0-31): 32 x LlamaDecoderLayer(
-            (self_attn): LlamaAttention(
-              (q_proj): lora.Linear4bit(
-                (base_layer): Linear4bit(in_features=4096, out_features=4096, bias=False)
-                (lora_dropout): ModuleDict(
-                  (default): Dropout(p=0.1, inplace=False)
-                )
-                (lora_A): ModuleDict(
-                  (default): Linear(in_features=4096, out_features=32, bias=False)
-                )
-                (lora_B): ModuleDict(
-                  (default): Linear(in_features=32, out_features=4096, bias=False)
-                )
-                (lora_embedding_A): ParameterDict()
-                (lora_embedding_B): ParameterDict()
-                (lora_magnitude_vector): ModuleDict()
-              )
-              (k_proj): lora.Linear4bit(
-                (base_layer): Linear4bit(in_features=4096, out_features=1024, bias=False)
-                (lora_dropout): ModuleDict(
-                  (default): Dropout(p=0.1, inplace=False)
-                )
-                (lora_A): ModuleDict(
-                  (default): Linear(in_features=4096, out_features=32, bias=False)
-                )
-                (lora_B): ModuleDict(
-                  (default): Linear(in_features=32, out_features=1024, bias=False)
-                )
-                (lora_embedding_A): ParameterDict()
-                (lora_embedding_B): ParameterDict()
-                (lora_magnitude_vector): ModuleDict()
-              )
-              (v_proj): lora.Linear4bit(
-                (base_layer): Linear4bit(in_features=4096, out_features=1024, bias=False)
-                (lora_dropout): ModuleDict(
-                  (default): Dropout(p=0.1, inplace=False)
-                )
-                (lora_A): ModuleDict(
-                  (default): Linear(in_features=4096, out_features=32, bias=False)
-                )
-                (lora_B): ModuleDict(
-                  (default): Linear(in_features=32, out_features=1024, bias=False)
-                )
-                (lora_embedding_A): ParameterDict()
-                (lora_embedding_B): ParameterDict()
-                (lora_magnitude_vector): ModuleDict()
-              )
-              (o_proj): lora.Linear4bit(
-                (base_layer): Linear4bit(in_features=4096, out_features=4096, bias=False)
-                (lora_dropout): ModuleDict(
-                  (default): Dropout(p=0.1, inplace=False)
-                )
-                (lora_A): ModuleDict(
-                  (default): Linear(in_features=4096, out_features=32, bias=False)
-                )
-                (lora_B): ModuleDict(
-                  (default): Linear(in_features=32, out_features=4096, bias=False)
-                )
-                (lora_embedding_A): ParameterDict()
-                (lora_embedding_B): ParameterDict()
-                (lora_magnitude_vector): ModuleDict()
-              )
-            )
-            (mlp): LlamaMLP(
-              (gate_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-              (up_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-              (down_proj): Linear4bit(in_features=14336, out_features=4096, bias=False)
-              (act_fn): SiLU()
-            )
-            (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-            (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-          )
-        )
-        (norm): LlamaRMSNorm((4096,), eps=1e-05)
-        (rotary_emb): LlamaRotaryEmbedding()
-      )
-      (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
-    )
-  )
-)
-```
-
-Changes to architecture:
-
-- Up to 32 LlamaDecoderLayers is the same
-- The attention layer
-  - The q_proj, k_proj v_proj and o_proj has a base_layer, lora_A and lora_B
-  - lora_A and lora_B: LoRA A and B matrices
-  - The 32 dimensions in the lora in and out is the `r`: they are 32 rank matrices
-  - The Alpha scaling factor and the lora A and B rankings will be multiplied together to be used as a delta to be apply on top of the base_layer
-  - lora_drop is another hyperparameter used but not one fo the 3 essential parameters
-  - Each layer that has a lora_A and lora_B is where our adaptor matrices has been inserted into the Llama architecture to adapt the bigger model but with much fewer dimensions (32, as specified by the r hyperparameter)
-- Nothing else has been changed
-
-If you add up all of the weights in our LoRA adaptors then there is:
-
-- Total number of params: 27,262,976
-- Total Size of Adaptors: 109.1MB
-
-For comparison, Llama 3.1 is:
-
-- Total number of params: 8 billion
-- Total Size: 32.1GB
-
-We still have a lot of paramters to train but 27 million is tiny compared to the total paramters in the base model, even the small variant.
-
-To verify size of the parameters for the fine-tuned model:
-
-1. Go to HuggingFace.co/[username]/[model_name]
-2. View size of `adapter_model.safetensors` file
-
-Should match calculation above.
-
-Size of Weights in MB:
-
-QLoRA-Size-of-Weights-in-MB.jpg
-32,000 -> 9,000 -> 5,600 -> 109
-Llama 3.1 8B Quantized to 8 bit Quantized to 4 bit QLoRA with r=32
+See [QLoRA: Hyperparameter Analysis lab - colab notes](https://github.com/jstoops/product-pricing-agent/blob/main/training/os-qlora.ipynb) for details.
 
 #### Model Selection
 
@@ -1514,6 +1262,8 @@ Decisions to select our base model:
 - **Number of parameters**: more gives you a better shot, particulaly where we have a lot of training data like we do in this case (400K) so the constraint is the amount of memory that we have the budget for (on a 4T can fit a 8B model but not much more)
 - **Llama vs Qwen vs Phi vas Gemma**
 - **Base or Instruct variants**: generally, if you are fine-tuning specifically for one problem where you have a particular prompt that you'll be using and expecting a response in a particular way then you might as well start with a base model, not an instruct variant, becuase you don't need to apply things like system prompts and user prompts. If you need to tee it up with a system promopt or final product needs a chat interface then an instruct variant is likely better as already trained to work with convesations
+
+See [Base Model Evaluation - colab notes](https://github.com/jstoops/product-pricing-agent/blob/main/training/os-base-model-evaluation.ipynb) for details.
 
 ##### Leaderboards
 
@@ -1528,7 +1278,7 @@ Toggle on the chat (aka instruct) varants: these are trained using varous reinfo
 
 Llama 3.1 is being picked because, although it doesn't score as well as other models, there is a convienance to Llama that makes the code a bit simpler and the task a bit easier: when you look at the tokenizer for Llama you see that every number from 0 to 999 gets mapped to one token.
 
-The same is not true for Qwen, Phi-3 or Gemma - all 3 models have a token per digit. For example, if the next token it predicts is 9 then that could be $9, $99 or $999 and that will only transpire when it does the token after tha.
+The same is not true for Qwen, Phi-3 or Gemma - all 3 models have a token per digit. For example, if the next token it predicts is 9 then that could be \\$9, \\$99 or \\$999 and that will only transpire when it does the token after that.
 
 This results in, when training for a task like this, we're using a model to generate tokens and make it think more like a regression model. We want it to solve and get better and better at predicting the next token and that should map to the price so it simplifies the problem if the price is reflected in exactly 1 token that the model has to generate.
 
@@ -1538,117 +1288,9 @@ It is a nuance but is a reason why we lean towards selecting Llama 3.1 in this c
 
 This gives Llama a bit of an edge because of this convience in the way that it tokenizes.
 
-#### Base Model Evaluation - colab notes
-
-Average Absolute Prediction Error From Our Models:
-<img src="./images/Product-Pricer-Model-Evaluation-Results.jpg" alt="Average Absolute Prediction Error Baseline Models" />
-
-Models evaluated:
-LLAMA_3_1 = "meta-llama/Meta-Llama-3.1-8B"
-QWEN_2_5 = "Qwen/Qwen2.5-7B"
-GEMMA_2 = "google/gemma-2-9b"
-PHI_3 = "microsoft/Phi-3-medium-4k-instruct"
-
-##### Evaluate Tokenizers
-
-Numbers used to test tokenizer:
-0, 1, 10, 100, 999, 1000
-
-Function used to get token:
-
-`tokens = tokenizer.encode(str(number), add_special_tokens=False)`
-
-`add_special_tokens=False`: do not add in things like a start and end of sentance token that will interfer with things. Just sinple convert this text into tokens that represents this test.
-
-Token investoigation results
-
-`investigate_tokenizer(LLAMA_3_1)`
-
-> The tokens for 0: [15]
-> The tokens for 1: [16]
-> The tokens for 10: [605]
-> The tokens for 100: [1041]
-> The tokens for 999: [5500]
-> The tokens for 1000: [1041, 15]
-
-`investigate_tokenizer(QWEN_2_5)`
-
-> The tokens for 0: [15]
-> The tokens for 1: [16]
-> The tokens for 10: [16, 15]
-> The tokens for 100: [16, 15, 15]
-> The tokens for 999: [24, 24, 24]
-> The tokens for 1000: [16, 15, 15, 15]
-
-`investigate_tokenizer(GEMMA_2)`
-
-> The tokens for 0: [235276]
-> The tokens for 1: [235274]
-> The tokens for 10: [235274, 235276]
-> The tokens for 100: [235274, 235276, 235276]
-> The tokens for 999: [235315, 235315, 235315]
-> The tokens for 1000: [235274, 235276, 235276, 235276]
-
-`investigate_tokenizer(PHI_3)`
-
-> The tokens for 0: [29871, 29900]
-> The tokens for 1: [29871, 29896]
-> The tokens for 10: [29871, 29896, 29900]
-> The tokens for 100: [29871, 29896, 29900, 29900]
-> The tokens for 999: [29871, 29929, 29929, 29929]
-> The tokens for 1000: [29871, 29896, 29900, 29900, 29900]
-
-Note: there is a smaller variant of PHI_3 that has same properties for representing numbers as tokens as Lllama that might be worth testing.
-
-##### Load Our Data
-
-`MAX_SEQUENCE_LENGTH = 182`
-
-This variable is used to limit the text to 179 tokens +3 tokens in case a start and end sentance token is used to ensure the price is not cut off.
-
-##### Prepare our Base Llama Model for evaluation
-
-`QUANT_4_BIT = True`
-
-A setting to select the 4 bit quantization if set to true, or 8 bit if set to false.
-
-Load the Tokenizer and the Model:
-
-- 4 bit Memory footprint: 5.6 GB
-- 8 bit Memory footprint: 9.1 GB
-
-`model_predict(prompt)` is how we call our model in inference mode.
-
-- take the prompt and encode it
-- `.to("cuba")` pushes it off to the GPU
-- `attention_mask` line stops it from printing a warning but doesn't actually affect anything. It prevents it from trying to predict anythign that is happening in that input token area. We only want it to predict what's coming afterwards. It will do this anyway but gives warning if you don't explicit tell it to do that.
-- Use `generate` method on base model with max tokens of 4 (only really need 1 token but just in case it prints a dollar sign or something) and `num_return_sequences=1` to tell it to only give back 1 answer
-- Take that one answer and set it as the response using decode to turn it back into a string
-- Our `exact_price` function reurns just the price from the answer
-
-##### Evaluation
-
-Use the test harness to see how it does.
-
-<img src="./images/Product-Pricer-Open-Source-LLM-Llama-3-1-8B-Base-Model-4-Bit.jpg" alt="Distribution of Prices Predicted Using Llama 3.1 8B Base Model with 4 Bit Quantization" />
-
-**Result**: Worse yet, even worse than taking a random guess lol.
-
-- Llama 3.1 8B Base Model 4 Bit Pricer Error=$395.72
-- RMSLE=1.49
-- Hits=28.0%
-
-<img src="./images/Product-Pricer-Open-Source-LLM-Llama-3-1-8B-Base-Model-8-Bit.jpg" alt="Distribution of Prices Predicted Using Llama 3.1 8B Base Model with 8 Bit Quantization" />
-
-**Result**: Some improvement compared to 4 bit quantization and better than random guessing but still a really bad result.
-
-- Llama 3.1 8B Base Model 8 Bit Pricer Error=$308.13
-- RMSLE=1.37
-- Hits=29.2%
-
 #### Major Hyperparameters for Fine-Tuning
 
-5 import hyper-parameters for QLoRA:
+5 important hyper-parameters for QLoRA:
 
 1. **Target Modules**: Pick a few layers in the architecture, the "Target Modules", freeze the weights, and train a lower dimensional matrice to apply to the Target Modules and use as a delta on the orignal layers
 2. **r**: how many dimensions in the lower dimensional adaptor matrice
@@ -1685,9 +1327,19 @@ The four steps in training:
 
 Note: this is for QLoRA based training. Ordinary training and fine-tuning, not LoRA base, then it would be the whole model that would need to be having gradients calculated and need to be shifted during optimization. That's what the big companies do to train the models in the first place and spent a significant amount of money to do so.
 
-LLM-Training-Steps-1-Forward-Pass.jpg
-LLM-Training-Steps-2-Loss-Calculation.jpg
-LLM-Training-Steps-3-Backward-Pass.jpg
+See [Open-Source Model Training - colab notes](https://github.com/jstoops/product-pricing-agent/blob/main/training/os-model-training.ipynb) for details.
+
+Step 1: Forward pass
+
+<img src="./images/LLM-Training-Steps-1-Forward-Pass.jpg" alt="Step 1: Forward pass - predict the next token in the training data" />
+
+Step 2: Loss calculation
+
+<img src="./images/LLM-Training-Steps-2-Loss-Calculation.jpg" alt="Step 2: Loss calculation - how different was it to the true next token" />
+
+Step 3: Backward pass
+
+<img src="./images/LLM-Training-Steps-3-Backward-Pass.jpg" alt="Step 3: Backward pass - how much should we tweak parameters to do better next time" />
 
 #### Next Token Prediction and Cross Entropy Loss
 
@@ -1764,213 +1416,7 @@ The _Optimizer_ is the formular that is used when it is time, when you've got th
 
 The process for doing that, or the algorithm that you pick, is called the Optimizer and there are a bunch of well known formulae foi how you could do that each with pros and cons.
 
-#### Training colab notes
-
-##### Setup
-
-RUN_NAME
-2025-04-30_01.18.39
-
-PROJECT_RUN_NAME
-pricer-2025-04-30_01.18.39
-
-HUB_MODEL_NAME
-clanredhead/pricer-2025-04-30_01.18.39
-
-You can just have one model and as you run this you just upload different versions that you store against that one model repository.
-
-Alternatively, like what is done here, you can seperate out your different runs and have them as pserate models because within them there are different versions potentially, different epochs, and keeping them seperate means when you train them with different hyperparameters you can keep note of that.
-
-Hyperparameters for QLoRA
-
-- r: 32 dimensions
-- alpha: 64 (double r)
-- Target Modules for Llama architecture: q_proj, v_proj, k_proj, o_proj
-- Dropout: 0.1 (10% of neurons removed from trainign set))
-- Quantization: 4-bit
-
-Hyperparameters for Training
-
-- 1 epoch
-- batch size = 4 on T4, an A100 box can go up to 16
-- Gradient Accumulation steps = 1 (try 2 or 4 if having memory issues)
-- Learning Rate (LR) = 1e-4 = 1 × 10^-4 = 0.0001
-- LR scheduler type = 'cosine' (start with LR that slowly decreases then decreases a lot then tails off at the end)
-- Warmup ratio = 0.03 (at the very beginning of the training process things are unstable because model has a lot to learn so dangerous to have a big LR initially so this says start with a lower LR and warm it up to the peak LR then start cosine trail)
-- Optimizer = paged_adamw_32bit (Adam with Weight Decay has good convergence so does a good job of finding the optimal spot but comes at a cost of consuming a lot of memory becuase it keeps a rolling average of previous gradients)
-
-Other administrative configurations:
-
-- Number of batch steps to take before it saves prgress to wandb = 50
-  How many steps before it uploads model to the hub = 2000
-  LOG_TO_WANDB to toggle whether to log to weights and biases
-
-##### Load the Tokenizer and the Model
-
-Boilerplate settings:
-
-- Tell the trainer that we want to pad the every data point so that it fills up the maximun sequence length by padding it up with end of sentance tokens (eos_token)
-
-  tokenizer.pad_token = tokenizer.eos_token
-  tokenizer.padding_side = "right"
-
-- Set pad token ID to stop it printing an unnecessary warnign that this is not set:
-
-  base_model.generation_config.pad_token_id = tokenizer.pad_token_id
-
-Memory footprint: 5591.5 MB
-
-##### Data Collector
-
-Catch: we don't care for the model to learn about how to predict all of the tokens of the prompt up until the dollar sign. We want it to learn how to predict that token right there. SO we don't want it to spend lots of time seeing how good it is at writing descriptions of products and then also leanr the price. We want it to focus on that price.
-
-Solution: set up a mask so that when you tell the trainer that you don't need it to leanr about the prompt you just want it to take it into account to provide it context but to learn how to predict this token right here after the dollar sign.
-
-Use HuggingFace DataCollatorForCompletionOnlyLM utility to do this:
-
-- Come up with response template, i.e the chunk of text that is going to indicate that I want you to predict whatever comes next, e.g. "Price is $"
-- The create an instance using repnse template and tokenizer
-
-##### Perform Training
-
-Pass in LoRA and Supervised Fine-Tuning (SFT) configurations, pulled from constants in setup.
-
-Hardcoded configurations are hyperparameters that don't matter and shoudl always stay the same.
-
-Tell it to push to the hub every time that it is doing a save:
-hub_strategy="every_save",
-push_to_hub=True,
-
-Make it a private repo (make it public once satisfied with the results):
-hub_private_repo=True
-
-Other settings:
-
-- eval_strategy: a best practice is to use an evaluation strategy by passing in validation data and well as training data. Do this!
-
-Setup SFTTrainer by passing in:
-
-- The base model to train, e.g. Llama 3.1 8B
-- Training data to use
-- LoRA parameters
-- Training parameters
-- The collator to tell it to focus on predicting whatever comes after "Price is $"
-
-Save to the hub after training the model:
-fine_tuning.model.push_to_hub(PROJECT_RUN_NAME, private=True)
-
-Resource usage: 14.7GB of 15GB used
-QLoRA-Training-4bit-Model-Resource-Usage.jpg
-
-#### Testing Fine-Tuned Model
-
-Model used: clanredhead/pricer-2025-04-30_01.18.39
-
-Memory footprint: 5700.6 MB
-
-fine_tuned_model
-
-    PeftModelForCausalLM(
-      (base_model): LoraModel(
-        (model): LlamaForCausalLM(
-          (model): LlamaModel(
-            (embed_tokens): Embedding(128256, 4096)
-            (layers): ModuleList(
-              (0-31): 32 x LlamaDecoderLayer(
-                (self_attn): LlamaAttention(
-                  (q_proj): lora.Linear4bit(
-                    (base_layer): Linear4bit(in_features=4096, out_features=4096, bias=False)
-                    (lora_dropout): ModuleDict(
-                      (default): Dropout(p=0.1, inplace=False)
-                    )
-                    (lora_A): ModuleDict(
-                      (default): Linear(in_features=4096, out_features=32, bias=False)
-                    )
-                    (lora_B): ModuleDict(
-                      (default): Linear(in_features=32, out_features=4096, bias=False)
-                    )
-                    (lora_embedding_A): ParameterDict()
-                    (lora_embedding_B): ParameterDict()
-                    (lora_magnitude_vector): ModuleDict()
-                  )
-                  (k_proj): lora.Linear4bit(
-                    (base_layer): Linear4bit(in_features=4096, out_features=1024, bias=False)
-                    (lora_dropout): ModuleDict(
-                      (default): Dropout(p=0.1, inplace=False)
-                    )
-                    (lora_A): ModuleDict(
-                      (default): Linear(in_features=4096, out_features=32, bias=False)
-                    )
-                    (lora_B): ModuleDict(
-                      (default): Linear(in_features=32, out_features=1024, bias=False)
-                    )
-                    (lora_embedding_A): ParameterDict()
-                    (lora_embedding_B): ParameterDict()
-                    (lora_magnitude_vector): ModuleDict()
-                  )
-                  (v_proj): lora.Linear4bit(
-                    (base_layer): Linear4bit(in_features=4096, out_features=1024, bias=False)
-                    (lora_dropout): ModuleDict(
-                      (default): Dropout(p=0.1, inplace=False)
-                    )
-                    (lora_A): ModuleDict(
-                      (default): Linear(in_features=4096, out_features=32, bias=False)
-                    )
-                    (lora_B): ModuleDict(
-                      (default): Linear(in_features=32, out_features=1024, bias=False)
-                    )
-                    (lora_embedding_A): ParameterDict()
-                    (lora_embedding_B): ParameterDict()
-                    (lora_magnitude_vector): ModuleDict()
-                  )
-                  (o_proj): lora.Linear4bit(
-                    (base_layer): Linear4bit(in_features=4096, out_features=4096, bias=False)
-                    (lora_dropout): ModuleDict(
-                      (default): Dropout(p=0.1, inplace=False)
-                    )
-                    (lora_A): ModuleDict(
-                      (default): Linear(in_features=4096, out_features=32, bias=False)
-                    )
-                    (lora_B): ModuleDict(
-                      (default): Linear(in_features=32, out_features=4096, bias=False)
-                    )
-                    (lora_embedding_A): ParameterDict()
-                    (lora_embedding_B): ParameterDict()
-                    (lora_magnitude_vector): ModuleDict()
-                  )
-                )
-                (mlp): LlamaMLP(
-                  (gate_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-                  (up_proj): Linear4bit(in_features=4096, out_features=14336, bias=False)
-                  (down_proj): Linear4bit(in_features=14336, out_features=4096, bias=False)
-                  (act_fn): SiLU()
-                )
-                (input_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-                (post_attention_layernorm): LlamaRMSNorm((4096,), eps=1e-05)
-              )
-            )
-            (norm): LlamaRMSNorm((4096,), eps=1e-05)
-            (rotary_emb): LlamaRotaryEmbedding()
-          )
-          (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
-        )
-      )
-    )
-
-Prediction function
-
-- Instead of taking the most likely token, it takes the most likely 3 tokens each representing a number
-- Takes the 3 tokens with the highest probability
-- Then looks at the probability given to the 3 tokens
-- Takes a weighted average between the 3 numbers
-- This is a way for us to get a little more precise about what it is tryign to predict
-- It allows it to predict something that is not always a whole number
-- A technique that can be used to solve for the fact that we're treating a regression problem as a classification problem
-- Takes the outputs of the fine-tined model and pass in the inputs, which are considered the logits
-- Logits: vector considered across all of the possible vocabulary entries for a tokenizer
-- Call softmax in order to convert that into probabilities
-- Go through the top 3 and take the weighted average
-- Then returns the sum of the weighted prices to give answer based on the top 3 instead of 1
+### Evaluate Fine-Tuned Open Source Model
 
 <img src="./images/Product-Pricer-Open-Source-LLM-Llama-3-1-8B-Fine-Tuned-4-Bit.jpg" alt="Distribution of Prices Predicted Using Fine-Tuned Llama 3.1 8B Base Model with 4 Bit Quantization" />
 
@@ -1979,6 +1425,7 @@ Prediction function
 - Llama 3.1 8B Fine-Tuned 4 Bit Pricer Error=$47.80
 - RMSLE=0.39
 - Hits=71.2%
+
 
 ### Agents
 
@@ -2200,7 +1647,7 @@ if __name__=="__main__":
 
 **Push Notification**
 
-<img src="./images/Product_Pricer_Push_Notification.png" alt="Example push notification from the Product Pricing agent" />
+<img src="./images/Product_Pricer_Push_Notification.jpg" alt="Example push notification from the Product Pricing agent" />
 
 #### UI
 
@@ -2253,10 +1700,6 @@ Source code and data:
 - [Product Vector Databasel](https://huggingface.co/clanredhead/pricer-2025-04-30_01.18.39/blob/main/models/products_vectorstore)
 - [Frontier Agent](https://github.com/jstoops/product-pricing-agent/agents/frontier_agent.py)
 
-Deployment steps:
-
-1.
-
 DataOps:
 
 - Log message color: <span style="color:blue">BLUE</span>
@@ -2287,10 +1730,6 @@ Source code and data:
 - [Random Forest Model](https://huggingface.co/clanredhead/pricer-2025-04-30_01.18.39/blob/main/models/random_forest_model.pkl)
 - [Random Forest Agent](https://github.com/jstoops/product-pricing-agent/agents/random_forest_agent.py)
 
-Deployment steps:
-
-1.
-
 MLOps:
 
 - Log message color: <span style="color:magenta">MAGENTA</span>
@@ -2312,10 +1751,6 @@ Source code and data:
 - [Ensemble Model](https://huggingface.co/clanredhead/pricer-2025-04-30_01.18.39/blob/main/models/ensemble_model.pkl)
 - [Product Vector Databasel](https://huggingface.co/clanredhead/pricer-2025-04-30_01.18.39/blob/main/models/products_vectorstore)
 - [Ensemble Agent](https://github.com/jstoops/product-pricing-agent/agents/ensemble_agent.py)
-
-Deployment steps:
-
-1.
 
 DataOps:
 
@@ -2340,10 +1775,6 @@ ensemble.price("iPad Pro 2nd generation")
 Source code and data:
 
 - [Deals Module](https://github.com/jstoops/product-pricing-agent/agents/deals.py)
-
-Deployment steps:
-
-1.
 
 DataOps:
 
@@ -2386,10 +1817,6 @@ Source code and data:
 
 - [Scanner Agent](https://github.com/jstoops/product-pricing-agent/agents/scanner_agent.py)
 
-Deployment steps:
-
-1.
-
 DataOps:
 
 - Log message color: <span style="color:cyan">CYAN</span>
@@ -2408,10 +1835,6 @@ result = agent.scan()
 Source code and data:
 
 - [Messaging Agent](https://github.com/jstoops/product-pricing-agent/agents/messaging_agent.py)
-
-Deployment steps:
-
-1.
 
 DataOps:
 
@@ -2432,10 +1855,6 @@ agent.push("You have a deal!")
 Source code and data:
 
 - [Planning Agent](https://github.com/jstoops/product-pricing-agent/agents/planning_agent.py)
-
-Deployment steps:
-
-1.
 
 DataOps:
 
@@ -2462,10 +1881,6 @@ Source code and data:
 - [Deal Agent Framework](https://github.com/jstoops/product-pricing-agent/frameworks/deal_agent_framework.py)
 - [Memory File](https://github.com/jstoops/product-pricing-agent/frameworks/memory.json)
 
-Deployment steps:
-
-1.
-
 DataOps:
 
 - Example [logs from first run](https://github.com/jstoops/product-pricing-agent/logs/first-run.txt)
@@ -2485,10 +1900,6 @@ Source code and data:
 
 - [Product Pricer UI](https://github.com/jstoops/product-pricing-agent/ui/product_pricer.py)
 - [Product Pricer Ops UI](https://github.com/jstoops/product-pricing-agent/ui/product_pricer_ops.py)
-
-Deployment steps:
-
-1.
 
 AppOps:
 
