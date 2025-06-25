@@ -1,13 +1,13 @@
 # Product Pricing Agent
 
-Given a description of a product, predict its price
+Given a description of a product, predict its price.
 
 - For a marketplace to estimate prices of goods
 - Future versions should be able to write and improve descriptions too
-- We'd typically use a Regression model to predict prices, but there are good reasons to try Gen ai
-  - We can train an LLM and evaluate it very clearly
-  - It means we can battle with GTP-4o
-  - Frontier models are already great at this
+- You'd typically use a Regression model to predict prices, but there are good reasons to try GenAI
+  - The ability to train an LLM and evaluate it very clearly
+  - Can compare traditonal ML and fine-tuned models with frontier models like GTP-4o
+  - Frontier models are already great at this but knowledge is based on last training date
 
 Build an Autonomous Agentic AI framework
 
@@ -15,11 +15,11 @@ Build an Autonomous Agentic AI framework
 - Estimates the price of the product
 - Sends push notifications when it finds great opportunities
 
-7 Agents will collaborate in the framework
+7 Agents collaborate in the framework
 
-- GTP-4o model will identify the deals from an RSS feed
-- Our frontier-busting fine-tuned model with estimate prices
-- We'll also use a Frontier Model with a massive RAG db
+- GTP-4o model identifies the deals from an RSS feed
+- The fine-tuned open-source model accurately estimate prices (better than frotnier models or traditional ML)
+- Use a Frontier Model with a massive RAG vectorestore with pricing data
 
 **Custom Agentic AI Framework**
 
@@ -100,8 +100,9 @@ Steps:
 ```
 dataset = load_dataset("McAuley-Lab/Amazon-Reviews-2023", f"raw_meta_Appliances", split="full", trust_remote_code=True)
 print(f"Number of Appliances: {len(dataset):,}")
-Number of Appliances: 94,327
 ```
+
+> Number of Appliances: 94,327
 
 2. Investigate a particular datapoint:
 
@@ -299,7 +300,7 @@ plt.show()
 
 #### Part 2
 
-**Objective**: Craft a dataset which is more balanced in terms of prices. Less heavily scewed to cheap items, with an average that's higher than $60. Try to balance out the categories - fewer Automotive items.
+**Objective**: Craft a dataset which is more balanced in terms of prices. Less heavily scewed to cheap items, with an average that's higher than \\$60. Balance out the categories, i.e. fewer Automotive items.
 
 Combine the Appliances dataset investigated with many other types of product like Electronics and Automotive. This will give us a massive dataset, and we can then be picky about choosing a subset that will be most suitable for training.
 
@@ -383,7 +384,7 @@ for dataset_name in dataset_names:
 
 <img src="./images/Product-Pricer-Curation-Part-2-Price-Distribution-All-Categories.jpg" alt="Distribution of Prices All Categories" />
 
-6. Counter number of items in each product type category:
+6. Count number of items in each product type category:
 
 ```
 category_counts = Counter()
@@ -418,7 +419,7 @@ plt.show()
 
 ##### Balance Dataset
 
-**Objective**: Craft a dataset which is more balanced in terms of prices. Less heavily scewed to cheap items, with an average that's higher than $60. Try to balance out the categories - fewer Automotive items.
+**Objective**: Craft a dataset which is more balanced in terms of prices. Less heavily scewed to cheap items, with an average that's higher than //$60. Balance out the categories, i.e. fewer Automotive items.
 
 1. Create a dict with a key of each price from $1 to $999 and in the value, put a list of items with that price (to nearest round number):
 
@@ -507,7 +508,7 @@ report(sample[398000])
 > MonoRS Coilovers Lowering Kit Made For Scion FRS Fully Adjustable, Set of 4
 > MonoRS Coilover damper kit by Godspeed Project are intermediate suspension upgrade setup for daily and Sunday club racing. Lowering your car with improved springs over factory and paired with Mono-tubo shocks with valving that allows 32 levels of rebound adjustment to improve handling without sacrifice comfort. Ride height can easily be adjusted by twisting the lower mount bracket. In order to keep weight gain at the minimum, most of attachments and accessories are CNC machined from billet aluminum. Koyo bearings are used when camber plate top mount is applicable depends on car models. To assure that our customers are getting high quality products, MonoRS coilovers are covered by 12 months limited warranty by the manufacturer from
 >
-> Price is \$765.00
+> Price is $765.00<br>
 > `[279, 14290, 505, 271, 7117, 374, 400, 22240, 13, 410]` > `[' the', ' manufacturer', ' from', '\n\n', 'Price', ' is', ' $', '765', '.', '00']`
 
 **Observation**: An interesting thing about the Llama tokenizer is that every number from 1 to 999 gets mapped to 1 token, much as we saw with gpt-4o. The same is not true of qwen2, gemma and phi3, which all map individual digits to tokens. This does turn out to be a bit useful for our project, although it's not an essential requirement.
@@ -629,7 +630,7 @@ Average Absolute Prediction Error Baseline Models:
 - RMSLE=1.72
 - Hits=11.6%
 
-**Average prince in dataset**
+**Average price in dataset**
 
 <img src="./images/Product-Pricer-Baseline-Traditional-ML-Models-Average.jpg" alt="Distribution of Prices Predicted Using Average Price" />
 
@@ -700,7 +701,7 @@ When we understand the data and say what do we think are going to be important f
 
 For example, the word "Intel" could be a word in our vocab indicating that the product is a laptop or computer of a certain value and depending on if it exists and how many times it appears that will affect that location in this bag of words. Then take this list of counts of words and see if there is some linear combination of these different words that when combined together predicts the price of a product.
 
-<img src="./images/Product-Pricer-Baseline-Traditional-ML-Models-BoW.jpg" alt="Distribution of Prices Predicted Using Feature Engineering" />
+<img src="./images/Product-Pricer-Baseline-Traditional-ML-Models-BoW.jpg" alt="Distribution of Prices Predicted Using Bag of Words and Linear Regression" />
 
 **Result**: Did much better than feature engineering and guessing.
 
@@ -736,7 +737,7 @@ Generally known to perform well for all shapes and sizes of datasets. They are g
 
 ##### Word2vec & SVR
 
-[Support Vector Regression (SVR)](https://www.geeksforgeeks.org/support-vector-regression-svr-using-linear-and-non-linear-kernels-in-scikit-learn/) which is a type of [support vector machines](https://en.wikipedia.org/wiki/Support_vector_machine). This is another technique for separating out data into different groups.
+[Support Vector Regression (SVR)](https://www.geeksforgeeks.org/support-vector-regression-svr-using-linear-and-non-linear-kernels-in-scikit-learn/) is a type of [support vector machines](https://en.wikipedia.org/wiki/Support_vector_machine). This is another technique for separating out data into different groups.
 
 <img src="./images/Product-Pricer-Baseline-Traditional-ML-Models-Word2Vec-SVR.jpg" alt="Distribution of Prices Predicted Using Word2vec and SVR" />
 
@@ -764,7 +765,7 @@ See Frontier Models vs Human Baseline Model [Setup](https://github.com/jstoops/p
 
 **Important note**: we aren't _Training_ the frontier models. We're only providing them with the Test dataset to see how they perform. They don't gain the benefit of the 400,000 training examples that we provided to the Traditional ML models.
 
-See Frontier Models vs Human Baseline Model [Setup](https://github.com/jstoops/product-pricing-agent/blob/main/baseline-models/frontier-vs-human-setup.ipynb) and [Test Results](https://github.com/jstoops/product-pricing-agent/blob/main/baseline-models/frontier-vs-human-test-results.ipynb) for details.
+See [Frontier Models vs Human Baseline Model](https://github.com/jstoops/product-pricing-agent/blob/main/baseline-models/frontier-vs-human.ipynb) for details.
 
 It's entirely possible that in their monstrously large training data, they've already been exposed to all the products in the training AND the test set. So there could be test "contamination" here which gives them an unfair advantage. We should keep that in mind.
 
@@ -772,15 +773,15 @@ _Why not OpenAI o1?_ This is not the kind of problem it is designed for. The o1 
 
 Create system prompt to ensure the LLM knows it needs to estimate the price of a product and reply with just the price and no explantation.
 
-In the user promot strip out the " to the nearest dollar" text since Frontier models are much more capable and powerful than traditional ML models and remove the "Price is $" text so that is can be used in the assistant prompt instead.
+In the user prompt strip out the " to the nearest dollar" text since Frontier models are much more capable and powerful than traditional ML models and remove the "Price is $" text so that is can be used in the assistant prompt instead.
 
 Example prompt:
 
-[{'role': 'system',
-'content': 'You estimate prices of items. Reply only with the price, no explanation'},
-{'role': 'user',
-'content': "How much does this cost?\n\nOEM AC Compressor w/A/C Repair Kit For Ford F150 F-150 V8 & Lincoln Mark LT 2007 2008 - BuyAutoParts NEW\nAs one of the world's largest automotive parts suppliers, our parts are trusted every day by mechanics and vehicle owners worldwide. This A/C Compressor and Components Kit is manufactured and tested to the strictest OE standards for unparalleled performance. Built for trouble-free ownership and 100% visually inspected and quality tested, this A/C Compressor and Components Kit is backed by our 100% satisfaction guarantee. Guaranteed Exact Fit for easy installation 100% BRAND NEW, premium ISO/TS 16949 quality - tested to meet or exceed OEM specifications Engineered for superior durability, backed by industry-leading unlimited-mileage warranty Included in this K"},
-{'role': 'assistant', 'content': 'Price is $'}]
+> [{'role': 'system',
+> 'content': 'You estimate prices of items. Reply only with the price, no explanation'},
+> {'role': 'user',
+> 'content': "How much does this cost?\n\nOEM AC Compressor w/A/C Repair Kit For Ford F150 F-150 V8 & Lincoln Mark LT 2007 2008 - BuyAutoParts NEW\nAs one of the world's largest automotive parts suppliers, our parts are trusted every day by mechanics and vehicle owners worldwide. This A/C Compressor and Components Kit is manufactured and tested to the strictest OE standards for unparalleled performance. Built for trouble-free ownership and 100% visually inspected and quality tested, this A/C Compressor and Components Kit is backed by our 100% satisfaction guarantee. Guaranteed Exact Fit for easy installation 100% BRAND NEW, premium ISO/TS 16949 quality - tested to meet or exceed OEM specifications Engineered for superior durability, backed by industry-leading unlimited-mileage warranty Included in this K"},
+> {'role': 'assistant', 'content': 'Price is $'}]
 
 ##### GPT-4o-mini
 
@@ -869,6 +870,8 @@ See GPT 4o Mini [Fine-Tuning](https://github.com/jstoops/product-pricing-agent/b
 
 #### Step 1: Preparing the Data
 
+Prepare our data for fine-tuning in JSONL (JSON Lines) format and upload to OpenAI.
+
 OpenAI expects data in JSONL format: rows of JSON each containing messages in the usual prompt format.
 
     {"messages" : [{"role": "system", "content": "You estimate prices..."}]}
@@ -928,8 +931,8 @@ def make_jsonl(items):
 print(make_jsonl(train[:3]))
 ```
 
-> {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nDelphi FG0166 Fuel Pump Module\nDelphi brings 80 years of OE Heritage into each Delphi pump, ensuring quality and fitment for each Delphi part. Part is validated, tested and matched to the right vehicle application Delphi brings 80 years of OE Heritage into each Delphi assembly, ensuring quality and fitment for each Delphi part Always be sure to check and clean fuel tank to avoid unnecessary returns Rigorous OE-testing ensures the pump can withstand extreme temperatures Brand Delphi, Fit Type Vehicle Specific Fit, Dimensions LxWxH 19.7 x 7.7 x 5.1 inches, Weight 2.2 Pounds, Auto Part Position Unknown, Operation Mode Mechanical, Manufacturer Delphi, Model FUEL PUMP, Dimensions 19.7"}, {"role": "assistant", "content": "Price is $226.95"}]}
-> {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nPower Stop Rear Z36 Truck and Tow Brake Kit with Calipers\nThe Power Stop Z36 Truck & Tow Performance brake kit provides the superior stopping power demanded by those who tow boats, haul loads, tackle mountains, lift trucks, and play in the harshest conditions. The brake rotors are drilled to keep temperatures down during extreme braking and slotted to sweep away any debris for constant pad contact. Combined with our Z36 Carbon-Fiber Ceramic performance friction formulation, you can confidently push your rig to the limit and look good doing it with red powder brake calipers. Components are engineered to handle the stress of towing, hauling, mountainous driving, and lifted trucks. Dust-free braking performance. Z36 Carbon-Fiber Ceramic formula provides the extreme braking performance demanded by your truck or 4x"}, {"role": "assistant", "content": "Price is $506.98"}]}
+> {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nDelphi FG0166 Fuel Pump Module\nDelphi brings 80 years of OE Heritage into each Delphi pump, ensuring quality and fitment for each Delphi part. Part is validated, tested and matched to the right vehicle application Delphi brings 80 years of OE Heritage into each Delphi assembly, ensuring quality and fitment for each Delphi part Always be sure to check and clean fuel tank to avoid unnecessary returns Rigorous OE-testing ensures the pump can withstand extreme temperatures Brand Delphi, Fit Type Vehicle Specific Fit, Dimensions LxWxH 19.7 x 7.7 x 5.1 inches, Weight 2.2 Pounds, Auto Part Position Unknown, Operation Mode Mechanical, Manufacturer Delphi, Model FUEL PUMP, Dimensions 19.7"}, {"role": "assistant", "content": "Price is $226.95"}]}<br>
+> {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nPower Stop Rear Z36 Truck and Tow Brake Kit with Calipers\nThe Power Stop Z36 Truck & Tow Performance brake kit provides the superior stopping power demanded by those who tow boats, haul loads, tackle mountains, lift trucks, and play in the harshest conditions. The brake rotors are drilled to keep temperatures down during extreme braking and slotted to sweep away any debris for constant pad contact. Combined with our Z36 Carbon-Fiber Ceramic performance friction formulation, you can confidently push your rig to the limit and look good doing it with red powder brake calipers. Components are engineered to handle the stress of towing, hauling, mountainous driving, and lifted trucks. Dust-free braking performance. Z36 Carbon-Fiber Ceramic formula provides the extreme braking performance demanded by your truck or 4x"}, {"role": "assistant", "content": "Price is $506.98"}]}<br>
 > {"messages": [{"role": "system", "content": "You estimate prices of items. Reply only with the price, no explanation"}, {"role": "user", "content": "How much does this cost?\n\nABBA 36 Gas Cooktop with 5 Sealed Burners - Tempered Glass Surface with SABAF Burners, Natural Gas Stove for Countertop, Home Improvement Essentials, Easy to Clean, 36 x 4.1 x 20.5\ncooktop Gas powered with 4 fast burners and 1 ultra-fast center burner Tempered glass surface with removable grid for easy cleaning Lightweight for easy installation. Installation Manual Included Counter cutout Dimensions 19 3/8 x 34 1/2 (see diagram) Insured shipping for your satisfaction and peace of mind Brand Name ABBA EST. 1956, Weight 30 pounds, Dimensions 20.5\\ D x 36\\ W x 4.1\\ H, Installation Type Count"}, {"role": "assistant", "content": "Price is $405.00"}]}
 
 3. Convert the items into jsonl and write them to a file:
@@ -964,7 +967,7 @@ validation_file
 
 > FileObject(id='file-MGCRJXFiCjosPToMF5ywab', bytes=47085, created_at=1745807167, filename='fine_tune_validation.jsonl', object='file', purpose='fine-tune', status='processed', expires_at=None, status_details=None)
 
-Note: rb means open is as a binary file to stream the files to OpenAI
+Note: rb means open it as a binary file to stream the files to OpenAI
 
 #### Step 2: Fine-Tune OpenAI Model
 
@@ -1095,12 +1098,11 @@ def messages_for(item):
 messages_for(test[0])
 ```
 
-> [{'role': 'system',
->
-> > 'content': 'You estimate prices of items. Reply only with the price, no explanation'},
-> > {'role': 'user',
-> > 'content': "How much does this cost?\n\nOEM AC Compressor w/A/C Repair Kit For Ford F150 F-150 V8 & Lincoln Mark LT 2007 2008 - BuyAutoParts NEW\nAs one of the world's largest automotive parts suppliers, our parts are trusted every day by mechanics and vehicle owners worldwide. This A/C Compressor and Components Kit is manufactured and tested to the strictest OE standards for unparalleled performance. Built for trouble-free ownership and 100% visually inspected and quality tested, this A/C Compressor and Components Kit is backed by our 100% satisfaction guarantee. Guaranteed Exact Fit for easy installation 100% BRAND NEW, premium ISO/TS 16949 quality - tested to meet or exceed OEM specifications Engineered for superior durability, backed by industry-leading unlimited-mileage warranty Included in this K"},
-> > {'role': 'assistant', 'content': 'Price is $'}]
+> [{'role': 'system',<br>
+>   'content': 'You estimate prices of items. Reply only with the price, no explanation'},<br>
+> {'role': 'user',<br>
+>  'content': "How much does this cost?\n\nOEM AC Compressor w/A/C Repair Kit For Ford F150 F-150 V8 & Lincoln Mark LT 2007 2008 - BuyAutoParts NEW\nAs one of the world's largest automotive parts suppliers, our parts are trusted every day by mechanics and vehicle owners worldwide. This A/C Compressor and Components Kit is manufactured and tested to the strictest OE standards for unparalleled performance. Built for trouble-free ownership and 100% visually inspected and quality tested, this A/C Compressor and Components Kit is backed by our 100% satisfaction guarantee. Guaranteed Exact Fit for easy installation 100% BRAND NEW, premium ISO/TS 16949 quality - tested to meet or exceed OEM specifications Engineered for superior durability, backed by industry-leading unlimited-mileage warranty Included in this K"},<br>
+> {'role': 'assistant', 'content': 'Price is $'}]
 
 3. Create a utility function to extract the price from a string
 
@@ -1127,8 +1129,8 @@ def gpt_fine_tuned(item):
 print(test[0].price)
 ```
 
-> 374.41
-> print(gpt_fine_tuned(test[0]))
+> 374.41<br>
+> print(gpt_fine_tuned(test[0]))<br>
 > 174.77
 
 5. Test the model against all the test data:
