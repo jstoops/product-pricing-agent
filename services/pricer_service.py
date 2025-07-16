@@ -13,10 +13,10 @@ secrets = [modal.Secret.from_name("hf-secret")]
 GPU = "T4"
 BASE_MODEL = "meta-llama/Meta-Llama-3.1-8B"
 PROJECT_NAME = "pricer"
-HF_USER = "ed-donner" # your HF name here! Or use mine if you just want to reproduce my results.
-RUN_NAME = "2024-09-13_13.04.39"
+HF_USER = "clanredhead" # your HF name here! Or use mine if you just want to reproduce my results.
+RUN_NAME = "2025-04-30_01.18.39"
 PROJECT_RUN_NAME = f"{PROJECT_NAME}-{RUN_NAME}"
-REVISION = "e8d637df551603dc86cd7a1598a8f44af4d7ae36"
+REVISION = None
 FINETUNED_MODEL = f"{HF_USER}/{PROJECT_RUN_NAME}"
 CACHE_DIR = "/cache"
 
