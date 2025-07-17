@@ -7,8 +7,6 @@ from sentence_transformers import SentenceTransformer
 import joblib
 from agents.agent import Agent
 
-
-
 class RandomForestAgent(Agent):
 
     name = "Random Forest Agent"
@@ -21,7 +19,7 @@ class RandomForestAgent(Agent):
         """
         self.log("Random Forest Agent is initializing")
         self.vectorizer = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-        self.model = joblib.load('random_forest_model.pkl')
+        self.model = joblib.load('../data/large-datasets/random_forest_model.pkl')
         self.log("Random Forest Agent is ready")
 
     def price(self, description: str) -> float:

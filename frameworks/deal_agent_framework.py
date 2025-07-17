@@ -6,6 +6,7 @@ from typing import List, Optional
 from twilio.rest import Client
 from dotenv import load_dotenv
 import chromadb
+sys.path.append('../')
 from agents.planning_agent import PlanningAgent
 from agents.deals import Opportunity
 from sklearn.manifold import TSNE
